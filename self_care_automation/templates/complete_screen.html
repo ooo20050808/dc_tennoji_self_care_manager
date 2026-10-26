@@ -51,7 +51,7 @@
             {% if user_role == 2 %}
                 <a href="{% url 'selfCare:saturday_choice'%}" class="nav-link">スタッフメニューへ</a>
             {% else %}
-                <a href="{% url 'selfCare:detail_select'　home_screen_id=home_screen.id %}" class="nav-link">アクション選択画面へ</a>
+                <a href="{% url 'selfCare:detail_select' home_screen_id=home_screen_id %}" class="nav-link">アクション選択画面へ</a>
             {% endif %}
             <form action="{% url 'selfCare:logout' %}" method="post">
                 {% csrf_token %}

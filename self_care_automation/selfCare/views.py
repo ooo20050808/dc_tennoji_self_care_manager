@@ -1768,7 +1768,7 @@ class CompleteView(LoginRequiredMixin, View):
                 )
 
             context = {
-                "home_screen": home_screen,
+                "home_screen_id": home_screen.id,  # モデル自体の代わりにIDを渡す
                 "selected_date": home_screen.date,
                 "user_role": user_role,  # 権限をテンプレートに渡す
                 "sleep_chart_image": sleep_chart_image,
