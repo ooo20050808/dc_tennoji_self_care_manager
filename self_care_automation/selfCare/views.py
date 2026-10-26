@@ -197,8 +197,8 @@ class UserListView(LoginRequiredMixin, View):
                     if medication_incomplete or other_data_missing:
                         medication_missing = True
                     else:
-                        # InputScreenデータがない場合はすべて未入力として扱う
-                        medication_missing = True
+                        # すべて入力されている場合は False にする
+                        medication_missing = False
 
             except InputScreen.DoesNotExist:
                 input_data = None  # データがない場合はNone
