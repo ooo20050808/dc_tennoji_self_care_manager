@@ -519,11 +519,7 @@
                             >
                         {% endif %}
                     </div>
-
-                    <form method="post" action="{% url 'selfCare:complete_screen' home_screen_id=home_screen_id %}">
-                        {% csrf_token %}
-                        <button type="submit" class="button confirm-button">確定</button>
-                    </form>
+                    <button type="submit" class="button confirm-button">確定</button>
                 </div>
             </div>
     </div>
