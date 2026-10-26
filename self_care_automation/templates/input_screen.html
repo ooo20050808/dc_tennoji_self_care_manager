@@ -572,5 +572,14 @@
         <button type="submit" class="btn btn-primary logout-btn">ログアウト</button>
     </form>
 
+    <!-- メインフォームの外に配置する -->
+    <div class="pagination-container">
+        {% if request.user.user_role == 1 %}
+            <a href="{% url 'selfCare:calendar_list'%}"><button type="button">戻る</button></a>
+        {% else %}
+            <a href="{% url 'selfCare:user_list' %}"><button type="button">戻る</button></a>
+        {% endif %}
+    </div>
+
 </body>
 </html>
