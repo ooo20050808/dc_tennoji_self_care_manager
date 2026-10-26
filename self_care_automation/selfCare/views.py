@@ -1732,40 +1732,19 @@ class CompleteView(LoginRequiredMixin, View):
             sleep_chart_image = None
             condition_chart_image = None
 
-            # 利用者権限の場合、グラフを生成
-            if user_role == 1:
-                # グラフ生成に必要なCONDITION_MAPを定義
-                CONDITION_MAP = {
-                    "✕": 1,  # 悪化
-                    "△": 2,  # 注意
-                    "〇": 3  # 良好
-                }
-
-                # グラフに表示する対象ユーザーはログインユーザー (request.user)
-                # InputScreenViewのグラフ生成ロジックに合わせて対象ユーザーを修正
-                chart_target_user = request.user
-
-                completion_date  = date.today()
-                # 睡眠時間グラフの作成
-                sleep_chart_image = create_chart_image(
-                    user=chart_target_user,
-                    home_screen=home_screen,
-                    data_field="sleep_time_hours",
-                    title="過去３０日間の睡眠時間の推移",
-                    y_label="睡眠時間 (時間)",
-                    completion_date = completion_date
-                )
-
-                # 体調グラフの生成
-                condition_chart_image = create_chart_image(
-                    user=chart_target_user,
-                    home_screen=home_screen,
-                    data_field="condition",
-                    title="過去30日間の体調の推移",
-                    y_label="体調",
-                    condition_map=CONDITION_MAP,
-                    completion_date=completion_date
-                )
+            # --- 【一時テスト】グラフ生成をバイパスして原因を切り分ける ---
+            # if user_role == 1:
+            #     CONDITION_MAP = {
+            #         "✕": 1,  # 悪化
+            #         "△": 2,  # 注意
+            #         "〇": 3  # 良好
+            #     }
+            #     chart_target_user = request.user
+            #     completion_date = date.today()
+            #
+            #     sleep_chart_image = create_chart_image(...)
+            #     condition_chart_image = create_chart_image(...)
+            # -------------------------------------------------------------
 
             context = {
                 "home_screen_id": home_screen.id,  # モデル自体の代わりにIDを渡す
