@@ -52,6 +52,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+WHITENOISE_USE_FINDERS = True
+
 ROOT_URLCONF = 'self_care_automation.urls'
 
 TEMPLATES = [
