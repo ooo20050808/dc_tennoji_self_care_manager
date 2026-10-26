@@ -373,21 +373,26 @@ class InputScreenForm(forms.ModelForm):
                 pass
 
         if at_home:
-            # スタッフ入室時刻の必須チェック
-            if not staff_entry_time:
-                self.add_error('staff_entry_time', '在宅の場合、スタッフ入室時刻は必須です。')
+            # ログインユーザーの権限を取得
+            user_role = getattr(self.user, 'user_role', None) if self.user else None
 
-            # スタッフ退出時刻の必須チェック
-            if not staff_leaving_time:
-                self.add_error('staff_leaving_time', '在宅の場合、スタッフ退出時刻は必須です。')
+            # スタッフ（user_role が 2 または 3）の場合のみ、スタッフ入退出時刻の入力を必須にする
+            if user_role and user_role != 1:
+                # スタッフ入室時刻の必須チェック
+                if not staff_entry_time:
+                    self.add_error('staff_entry_time', '在宅の場合、スタッフ入室時刻は必須です。')
 
-            # スタッフ入退出時刻の前後関係チェック
-            if staff_entry_time and staff_leaving_time:
-                # 念のため time オブジェクトであるかチェック
-                if isinstance(staff_entry_time, time) and isinstance(staff_leaving_time, time):
-                    if staff_entry_time >= staff_leaving_time:
-                        self.add_error('staff_leaving_time',
-                                       'スタッフ退出時刻は入室時刻より後の時刻を入力してください。')
+                # スタッフ退出時刻の必須チェック
+                if not staff_leaving_time:
+                    self.add_error('staff_leaving_time', '在宅の場合、スタッフ退出時刻は必須です。')
+
+                # スタッフ入退出時刻の前後関係チェック
+                if staff_entry_time and staff_leaving_time:
+                    # 念のため time オブジェクトであるかチェック
+                    if isinstance(staff_entry_time, time) and isinstance(staff_leaving_time, time):
+                        if staff_entry_time >= staff_leaving_time:
+                            self.add_error('staff_leaving_time',
+                                           'スタッフ退出時刻は入室時刻より後の時刻を入力してください。')
 
         # 在宅チェックがない場合、入室時刻と退出時刻のバリデーションを実行
         if not at_home:
