@@ -1044,44 +1044,44 @@ class DeleteCompleteView(LoginRequiredMixin, TemplateView):
         return context
 
 #過去１ヶ月の睡眠時間・体調のデータを取得しグラフをPNG画像データとして返す関数
-def create_chart_image(user, home_screen, data_field, title, y_label, condition_map=None, is_staff=False, completion_date=None):
-    #登録完了日が指定されていればそれを使用
+# 過去１ヶ月の睡眠時間・体調のデータを取得しグラフをPNG画像データとして返す関数
+def create_chart_image(user, home_screen, data_field, title, y_label, condition_map=None, is_staff=False,
+                       completion_date=None):
+    import matplotlib
+    matplotlib.use('Agg')  # GUIを使わないバックエンドを強制
+    import matplotlib.pyplot as plt
+
+    # 既存のプロットを完全にクリアしてメモリリークや循環参照を防ぐ
+    plt.close('all')
+
+    # 登録完了日が指定されていればそれを使用
     if completion_date:
         end_date = completion_date
-        #３０日前から登録完了日まで表示
         start_date = end_date - timedelta(days=30)
     else:
-        # 過去３１日間の日付範囲を計算 (31日間のデータを表示)
         end_date = home_screen.date
-        # 30日前から今日を含めて31日間
         start_date = end_date - timedelta(days=30)
 
     # 1. 過去31日間の全ての日付のリストを生成
     all_dates = [start_date + timedelta(days=i) for i in range(31)]
 
-    # 2. 過去31日間のデータを取得
-    # .values() で 'display_date' が date オブジェクトになるため、
-    # 辞書のキーとして使いやすいように date オブジェクトのまま保持します。
-    raw_data = InputScreen.objects.filter(
-        user=user,
-        date__date__range=[start_date, end_date]
-    ).order_by("date__date").annotate(
-        data_value=F(data_field),
-        display_date=F("date__date")
-    ).values('display_date', 'data_value')
+    # 2. データベースからプリミティブな値（辞書形式）でデータを取得し、モデルインスタンスの巻き込みを防止する
+    raw_data = list(
+        InputScreen.objects.filter(
+            user=user,
+            date__date__range=[start_date, end_date]
+        ).values('date__date', data_field)
+    )
 
-    # データを日付をキーとする辞書に変換（高速なルックアップのため）
-    data_map = {d['display_date']: d['data_value'] for d in raw_data}
+    # データを日付をキーとする辞書に変換
+    data_map = {item['date__date']: item[data_field] for item in raw_data if item['date__date'] is not None}
 
-    # 3. 全ての日付リストに基づいて、表示用のリストを作成
-    dates_labels = []  # 横軸のラベル ('mm/dd')
-    values = []  # 縦軸の値 (データがあれば値、なければ None/NaN)
+    # 3. 表示用のリストを作成
+    dates_labels = []
+    values = []
 
     for current_date in all_dates:
-        # 横軸ラベルは 'mm/dd' 形式で全ての日付を含める
         dates_labels.append(current_date.strftime("%m/%d"))
-
-        # データがあればその値を、なければ None を格納
         value = data_map.get(current_date, None)
         values.append(value)
 
@@ -1091,102 +1091,69 @@ def create_chart_image(user, home_screen, data_field, title, y_label, condition_
 
     # 体調の場合、文字列を数値にマッピング
     if condition_map:
-        # None の値はマッピング処理から除外
         values = [condition_map.get(v, None) if v is not None else None for v in values]
-    # ※ MatplotlibはNone値を自動的にプロットから除外してくれます。
 
-    plt.switch_backend("agg")
-    # スタッフの場合はグラフ幅を狭める
-    if is_staff:
-        plt.figure(figsize=(8, 10))
-    else:
-        plt.figure(figsize=(15, 9))
+    # フィギュアとアックスを明示的に作成（オブジェクト指向スタイルで循環参照を回避）
+    fig, ax = plt.subplots(figsize=(8, 10) if is_staff else (15, 9))
 
-    # グラフの軸設定をデータによって変更
     if data_field == "sleep_time_hours":
-        # 有効なデータ点のインデックスと値を抽出
         valid_indices = []
         valid_values = []
-        valid_dates = []
         for i, value in enumerate(values):
             if value is not None:
                 valid_indices.append(i)
                 valid_values.append(value)
-                valid_dates.append(dates_labels[i])
 
         if completion_date:
             actual_days = (end_date - start_date).days
-            plt.xlim(0, actual_days)
+            ax.set_xlim(0, actual_days)
         else:
-            #x軸の範囲を０～３０に固定してグラフの頭とお尻をそろえる
-            plt.xlim(0, 30)
+            ax.set_xlim(0, 30)
 
-        # 有効なデータ点のみでプロット（スタッフと利用者で共通の処理）
         if valid_values:
-            if is_staff:
-                # None を含むリストをプロットすると、自動的にその点はスキップされます
-                plt.plot(valid_indices, valid_values, marker="o", linestyle="-", color="lightblue", markersize=10)
-            else:
-                # None を含むリストをプロットすると、自動的にその点はスキップされます
-                plt.plot(valid_indices, valid_values, marker="o", linestyle="-", color="lightblue", markersize=10, linewidth=5)
+            linewidth_val = 2 if is_staff else 5
+            ax.plot(valid_indices, valid_values, marker="o", linestyle="-", color="lightblue", markersize=10,
+                    linewidth=linewidth_val)
         else:
-            # データがない場合はメッセージを表示
-            plt.text(0.5, 0.5, 'データがありません', ha='center', va='center', fontsize=16,
-                     transform=plt.gca().transAxes)
-        plt.ylim(0, 20)
-        plt.yticks(range(0, 21, 5))  # 0, 5, 10, 15, 20 の目盛り
-    else:
-        # 体調は散布図の方が分かりやすい
-        plt.plot(dates_labels, values, marker="o", linestyle="", markersize=10, color="tomato")
-        plt.yticks([1, 2, 3], ["✕（悪化）", "△（注意）", "〇（良好）"])
-        plt.ylim(0.5, 3.5)
+            ax.text(0.5, 0.5, 'データがありません', ha='center', va='center', fontsize=16, transform=ax.transAxes)
 
-    if is_staff:
-        plt.title(title, fontsize=20, pad=20)
-        plt.xlabel("日付", fontsize=20, labelpad=10)
-        if data_field == "sleep_time_hours":
-            plt.ylabel("睡眠時間", fontsize=25, labelpad=10)
-        else:
-            plt.ylabel("体調", fontsize=25, labelpad=10)
+        ax.set_ylim(0, 20)
+        ax.set_yticks(range(0, 21, 5))
     else:
-        plt.title(title, fontsize=30, pad=20)
-        plt.xlabel("日付", fontsize=20, labelpad=10)
-        if data_field == "sleep_time_hours":
-            plt.ylabel("睡眠時間", fontsize=25, labelpad=10)
-        else:
-            plt.ylabel("体調", fontsize=25, labelpad=10)
+        ax.plot(dates_labels, values, marker="o", linestyle="", markersize=10, color="tomato")
+        ax.set_yticks([1, 2, 3])
+        ax.set_yticklabels(["✕（悪化）", "△（注意）", "〇（良好）"])
+        ax.set_ylim(0.5, 3.5)
 
-    # ラベルが密集しすぎるのを避けるため、表示する目盛りを調整（例：5日おき）
+    title_fontsize = 20 if is_staff else 30
+    label_fontsize = 20 if is_staff else 25
+    tick_fontsize = 20 if is_staff else 40
+
+    ax.set_title(title, fontsize=title_fontsize, pad=20)
+    ax.set_xlabel("日付", fontsize=label_fontsize, labelpad=10)
+
+    if data_field == "sleep_time_hours":
+        ax.set_ylabel("睡眠時間", fontsize=label_fontsize, labelpad=10)
+    else:
+        ax.set_ylabel("体調", fontsize=label_fontsize, labelpad=10)
+
     tick_interval = 4
-    if is_staff:
-        plt.xticks(
-            ticks=range(0, len(dates_labels), tick_interval),
-            labels=dates_labels[::tick_interval],
-            rotation=45,
-            ha="right",
-            fontsize=20
-        )
-        plt.yticks(fontsize=20)
-    else:
-        plt.xticks(
-            ticks=range(0, len(dates_labels), tick_interval),
-            labels=dates_labels[::tick_interval],
-            rotation=45,
-            ha="right",
-            fontsize=40
-        )
-        plt.yticks(fontsize=40)
+    ax.set_xticks(range(0, len(dates_labels), tick_interval))
+    ax.set_xticklabels(dates_labels[::tick_interval], rotation=45, ha="right", fontsize=tick_fontsize)
+    ax.tick_params(axis='y', labelsize=tick_fontsize)
 
-    plt.grid(axis='y', linestyle='--')
-    plt.tight_layout()
-    plt.subplots_adjust(left=0.15)
+    ax.grid(axis='y', linestyle='--')
+    fig.tight_layout()
+    fig.subplots_adjust(left=0.15)
 
-    #グラフをPNGとしてメモリ上に保存し、Base64エンコードして返す
+    # グラフをPNGとしてメモリ上に保存し、Base64エンコードして返す
     buffer = io.BytesIO()
-    plt.savefig(buffer, format="png")
-    plt.close() #グラフを閉じてメモリを解放
+    fig.savefig(buffer, format="png")
+    plt.close(fig)  # 明示的にフィギュアを閉じてメモリと参照を解放
+    buffer.seek(0)
     png_image = base64.b64encode(buffer.getvalue()).decode("utf-8")
     buffer.close()
+
     return 'data:image/png;base64,{}'.format(png_image)
 
 # 新しく追加: 棒グラフをPNG画像データとして返す関数
@@ -1732,19 +1699,37 @@ class CompleteView(LoginRequiredMixin, View):
             sleep_chart_image = None
             condition_chart_image = None
 
-            # --- 【一時テスト】グラフ生成をバイパスして原因を切り分ける ---
-            # if user_role == 1:
-            #     CONDITION_MAP = {
-            #         "✕": 1,  # 悪化
-            #         "△": 2,  # 注意
-            #         "〇": 3  # 良好
-            #     }
-            #     chart_target_user = request.user
-            #     completion_date = date.today()
-            #
-            #     sleep_chart_image = create_chart_image(...)
-            #     condition_chart_image = create_chart_image(...)
-            # -------------------------------------------------------------
+            # 利用者権限の場合、グラフを生成（有効化）
+            if user_role == 1:
+                CONDITION_MAP = {
+                    "✕": 1,  # 悪化
+                    "△": 2,  # 注意
+                    "〇": 3  # 良好
+                }
+
+                chart_target_user = request.user
+                completion_date = date.today()
+
+                # 睡眠時間グラフの作成
+                sleep_chart_image = create_chart_image(
+                    user=chart_target_user,
+                    home_screen=home_screen,
+                    data_field="sleep_time_hours",
+                    title="過去３０日間の睡眠時間の推移",
+                    y_label="睡眠時間 (時間)",
+                    completion_date=completion_date
+                )
+
+                # 体調グラフの生成
+                condition_chart_image = create_chart_image(
+                    user=chart_target_user,
+                    home_screen=home_screen,
+                    data_field="condition",
+                    title="過去30日間の体調の推移",
+                    y_label="体調",
+                    condition_map=CONDITION_MAP,
+                    completion_date=completion_date
+                )
 
             context = {
                 "home_screen_id": home_screen.id,  # モデル自体の代わりにIDを渡す
