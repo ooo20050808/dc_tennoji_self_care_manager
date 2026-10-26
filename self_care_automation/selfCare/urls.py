@@ -80,8 +80,8 @@ urlpatterns = [
     path('delete/complete/', DeleteCompleteView.as_view(), name='user_delete_complete'),
     # 入力画面ページ
     path('input/<int:home_screen_id>/', views.InputScreenView.as_view(), name='input_screen'),
-    # グラフ表示ページ (name を 'chart' に変更)
-    path('input/<int:home_screen_id>/chart/<str:chart_type>/', views.ChartView.as_view(), name='chart'),
+    # グラフ表示ページ
+    path('input/<int:home_screen_id>/chart/<str:chart_type>/', views.ChartView.as_view(), name='chart_detail'),
     # 登録完了画面ページ (グラフも表示)
     path('complete/<int:home_screen_id>/', views.CompleteView.as_view(), name='complete_screen'),
     #コメント一覧画面ページ
