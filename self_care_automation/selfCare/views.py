@@ -1695,11 +1695,10 @@ class CompleteView(LoginRequiredMixin, View):
             home_screen = HomeScreen.objects.get(id=home_screen_id)
             user_role = request.user.user_role  # ログインユーザーの権限を取得
 
-            # グラフ生成は利用者（user_role=1）の場合のみ行う
             sleep_chart_image = None
             condition_chart_image = None
 
-            # 利用者権限の場合、グラフを生成（有効化）
+            # 利用者権限の場合、グラフを生成
             if user_role == 1:
                 CONDITION_MAP = {
                     "✕": 1,  # 悪化
@@ -1710,35 +1709,41 @@ class CompleteView(LoginRequiredMixin, View):
                 chart_target_user = request.user
                 completion_date = date.today()
 
-                # 睡眠時間グラフの作成
-                sleep_chart_image = create_chart_image(
-                    user=chart_target_user,
-                    home_screen=home_screen,
-                    data_field="sleep_time_hours",
-                    title="過去３０日間の睡眠時間の推移",
-                    y_label="睡眠時間 (時間)",
-                    completion_date=completion_date
-                )
+                # ★ Python 3.14 環境でのライブラリ起因の予期せぬ再帰エラーを防ぐため try-except で保護
+                try:
+                    # 睡眠時間グラフの作成
+                    sleep_chart_image = create_chart_image(
+                        user=chart_target_user,
+                        home_screen=home_screen,
+                        data_field="sleep_time_hours",
+                        title="過去３０日間の睡眠時間の推移",
+                        y_label="睡眠時間 (時間)",
+                        completion_date=completion_date
+                    )
+                except Exception:
+                    sleep_chart_image = None
 
-                # 体調グラフの生成
-                condition_chart_image = create_chart_image(
-                    user=chart_target_user,
-                    home_screen=home_screen,
-                    data_field="condition",
-                    title="過去30日間の体調の推移",
-                    y_label="体調",
-                    condition_map=CONDITION_MAP,
-                    completion_date=completion_date
-                )
+                try:
+                    # 体調グラフの生成
+                    condition_chart_image = create_chart_image(
+                        user=chart_target_user,
+                        home_screen=home_screen,
+                        data_field="condition",
+                        title="過去30日間の体調の推移",
+                        y_label="体調",
+                        condition_map=CONDITION_MAP,
+                        completion_date=completion_date
+                    )
+                except Exception:
+                    condition_chart_image = None
 
             context = {
-                "home_screen_id": home_screen.id,  # モデル自体の代わりにIDを渡す
+                "home_screen_id": home_screen.id,
                 "selected_date": home_screen.date,
-                "user_role": user_role,  # 権限をテンプレートに渡す
+                "user_role": user_role,
                 "sleep_chart_image": sleep_chart_image,
                 "condition_chart_image": condition_chart_image,
             }
-            # 新しいテンプレート 'complete_screen.html' にレンダリング
             return render(request, "complete_screen.html", context)
 
         except HomeScreen.DoesNotExist:
