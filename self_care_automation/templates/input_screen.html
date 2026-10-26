@@ -14,9 +14,9 @@
         <h2 class="user-name-header">利用者: {{ target_user_name }}</h2>
         <div class="pagination-container">
             {% if user_role == 2 %}
-                <a href="{% url 'selfCare:saturday_choice'%}" ><button>スタッフメニューへ</button></a>
+                <a href="{% url 'selfCare:saturday_choice'%}" ><button type="button">スタッフメニューへ</button></a>
             {% else %}
-                <a href="{% url 'selfCare:detail_select'　home_screen_id=home_screen.id %}"><button>アクション選択画面へ</button></a>
+                <a href="{% url 'selfCare:detail_select' home_screen_id=home_screen.id %}"><button type="button">アクション選択画面へ</button></a>
             {% endif %}
         </div>
 
@@ -57,7 +57,6 @@
                     <div class="input-row">
                         <label class="label-inline" for="{{ form.leaving_time.id_for_label }}">退出 (利用者入力)</label>
                         <span class="time-input-group">
-                            {# form.leaving_time をプルダウンとして手動でレンダリング #}
                             <select
                                 name="{{ form.leaving_time.name }}"
                                 id="{{ form.leaving_time.id_for_label }}"
@@ -103,7 +102,7 @@
                             <select
                                 name="{{ form.leaving_time.name }}"
                                 id="{{ form.leaving_time.id_for_label }}"
-                                {% if form.leaving_time.field.widget.attrs.disabled %}disabled{% endif %} {# disabled属性をビューで設定する #}
+                                {% if form.leaving_time.field.widget.attrs.disabled %}disabled{% endif %}
                             >
                                 <option value="" {% if not leaving_time_display %}selected{% endif %}>--:--</option>
                                 {% for time_str in staff_leaving_time_choices %}
@@ -213,104 +212,42 @@
                     {% endif %}
                 </div>
 
-                <!-- 体調入力：ラジオボタンと詳細入力モーダル連携 -->
+                <!-- 体調入力 -->
                 <div class="input-row">
                     <label class="label-heading">体調</label>
 
-                    <!-- モーダル表示ボタン（リターンビジター用） -->
                     {% if request.user.user_role == 1 and form.condition.value %}
                         <input type="radio" name="modal-trigger" id="show-modal-trigger" class="modal-trigger-radio">
                         <label for="show-modal-trigger" class="modal-show-button">体調詳細を入力</label>
                     {% endif %}
 
-                    <!-- ラジオボタン選択肢 -->
                     {% if request.user.user_role == 2 %}
-                        <!-- スタッフ用：ラジオボタンを無効化 -->
-                        <input
-                            type="radio"
-                            name="{{ form.condition.name }}"
-                            value="〇"
-                            id="condition-good"
-                            {% if form.condition.value == '〇' %}checked{% endif %}
-                            disabled
-                        >
-                        <input
-                            type="radio"
-                            name="{{ form.condition.name }}"
-                            value="△"
-                            id="condition-caution"
-                            {% if form.condition.value == '△' %}checked{% endif %}
-                            disabled
-                        >
-                        <input
-                            type="radio"
-                            name="{{ form.condition.name }}"
-                            value="✕"
-                            id="condition-poor"
-                            {% if form.condition.value == '✕' %}checked{% endif %}
-                            disabled
-                        >
+                        <input type="radio" name="{{ form.condition.name }}" value="〇" id="condition-good" {% if form.condition.value == '〇' %}checked{% endif %} disabled>
+                        <input type="radio" name="{{ form.condition.name }}" value="△" id="condition-caution" {% if form.condition.value == '△' %}checked{% endif %} disabled>
+                        <input type="radio" name="{{ form.condition.name }}" value="✕" id="condition-poor" {% if form.condition.value == '✕' %}checked{% endif %} disabled>
                     {% else %}
-                        <!-- 利用者用：通常のラジオボタン -->
-                        <input
-                            type="radio"
-                            name="{{ form.condition.name }}"
-                            value="〇"
-                            id="condition-good"
-                            {% if form.condition.value == '〇' %}checked{% endif %}
-                        >
-                        <input
-                            type="radio"
-                            name="{{ form.condition.name }}"
-                            value="△"
-                            id="condition-caution"
-                            {% if form.condition.value == '△' %}checked{% endif %}
-                        >
-                        <input
-                            type="radio"
-                            name="{{ form.condition.name }}"
-                            value="✕"
-                            id="condition-poor"
-                            {% if form.condition.value == '✕' %}checked{% endif %}
-                        >
+                        <input type="radio" name="{{ form.condition.name }}" value="〇" id="condition-good" {% if form.condition.value == '〇' %}checked{% endif %}>
+                        <input type="radio" name="{{ form.condition.name }}" value="△" id="condition-caution" {% if form.condition.value == '△' %}checked{% endif %}>
+                        <input type="radio" name="{{ form.condition.name }}" value="✕" id="condition-poor" {% if form.condition.value == '✕' %}checked{% endif %}>
                     {% endif %}
 
-                    {% if request.user.user_role == 2 %}
-                        {% if form.condition.value %}
-                            <label for="confirm-modal-trigger" class="button confirm-modal-button">確認</label>
-                        {% endif %}
+                    {% if request.user.user_role == 2 and form.condition.value %}
+                        <label for="confirm-modal-trigger" class="button confirm-modal-button">確認</label>
                     {% endif %}
 
                     <div class="condition-options">
                         {% if request.user.user_role == 2 %}
-                            <!-- スタッフ用：ラベルとして表示 -->
-                            <div class="condition-option">
-                                <span class="option-label">○ 良好</span>
-                            </div>
-                            <div class="condition-option">
-                                <span class="option-label">△ 注意</span>
-                            </div>
-                            <div class="condition-option">
-                                <span class="option-label">× 悪化</span>
-                            </div>
+                            <div class="condition-option"><span class="option-label">○ 良好</span></div>
+                            <div class="condition-option"><span class="option-label">△ 注意</span></div>
+                            <div class="condition-option"><span class="option-label">× 悪化</span></div>
                         {% else %}
-                            <!-- 利用者用：クリック可能なラベル -->
-                            <label class="condition-option" for="condition-good">
-                                <span class="option-label">○ 良好</span>
-                            </label>
-
-                            <label class="condition-option" for="condition-caution">
-                                <span class="option-label">△ 注意</span>
-                            </label>
-
-                            <label class="condition-option" for="condition-poor">
-                                <span class="option-label">× 悪化</span>
-                            </label>
+                            <label class="condition-option" for="condition-good"><span class="option-label">○ 良好</span></label>
+                            <label class="condition-option" for="condition-caution"><span class="option-label">△ 注意</span></label>
+                            <label class="condition-option" for="condition-poor"><span class="option-label">× 悪化</span></label>
                         {% endif %}
                     </div>
 
-                    <!-- CSSモーダル：○ 良好選択時用 -->
-                    <!-- モーダル閉じる用ラジオボタン -->
+                    <!-- モーダル：良好 -->
                     <input type="radio" name="modal-trigger" id="close-modal-good" class="modal-close-trigger">
                     <div class="modal-overlay" id="modal-good">
                         <div class="modal-content">
@@ -321,23 +258,10 @@
                             <div class="modal-body">
                                 <p class="modal-subtitle">体調が良好な理由や、気づいたことがあればお聞かせください。</p>
                                 {% if request.user.user_role == 2 %}
-                                    <!-- スタッフ用：読み取り専用表示 -->
-                                    <div class="condition-detail-view">
-                                        {% if condition_detail_good %}
-                                            {{ condition_detail_good }}
-                                        {% else %}
-                                            <span>記入なし</span>
-                                        {% endif %}
-                                    </div>
+                                    <div class="condition-detail-view">{% if condition_detail_good %}{{ condition_detail_good }}{% else %}<span>記入なし</span>{% endif %}</div>
                                     <input type="hidden" name="condition_detail_good" value="{{ condition_detail_good|default_if_none:'' }}">
                                 {% else %}
-                                    <!-- 利用者用：編集可能 -->
-                                    <textarea
-                                        name="condition_detail_good"
-                                        id="condition-detail-good"
-                                        placeholder="体調が良い理由や詳細情報を入力..."
-                                        class="condition-detail"
-                                    >{{ condition_detail_good|default_if_none:'' }}</textarea>
+                                    <textarea name="condition_detail_good" id="condition-detail-good" placeholder="体調が良い理由や詳細情報を入力..." class="condition-detail">{{ condition_detail_good|default_if_none:'' }}</textarea>
                                     <div class="modal-buttons">
                                         <label class="modal-btn confirm-btn" for="close-modal-good">確定</label>
                                     </div>
@@ -346,8 +270,7 @@
                         </div>
                     </div>
 
-                    <!-- CSSモーダル：△ 要注意選択時用 -->
-                    <!-- モーダル閉じる用ラジオボタン -->
+                    <!-- モーダル：注意 -->
                     <input type="radio" name="modal-trigger" id="close-modal-caution" class="modal-close-trigger">
                     <div class="modal-overlay" id="modal-caution">
                         <div class="modal-content">
@@ -358,23 +281,10 @@
                             <div class="modal-body">
                                 <p class="modal-subtitle">具体的にどのような予兆がありますか？</p>
                                 {% if request.user.user_role == 2 %}
-                                    <!-- スタッフ用：読み取り専用表示 -->
-                                    <div class="condition-detail-view">
-                                        {% if condition_detail_caution %}
-                                            {{ condition_detail_caution }}
-                                        {% else %}
-                                            <span>記入なし</span>
-                                        {% endif %}
-                                    </div>
+                                    <div class="condition-detail-view">{% if condition_detail_caution %}{{ condition_detail_caution }}{% else %}<span>記入なし</span>{% endif %}</div>
                                     <input type="hidden" name="condition_detail_caution" value="{{ condition_detail_caution|default_if_none:'' }}">
                                 {% else %}
-                                    <!-- 利用者用：編集可能 -->
-                                    <textarea
-                                        name="condition_detail_caution"
-                                        id="condition-detail-caution"
-                                        placeholder="具体的な症状や予兆を入力..."
-                                        class="condition-detail"
-                                    >{{ condition_detail_caution|default_if_none:'' }}</textarea>
+                                    <textarea name="condition_detail_caution" id="condition-detail-caution" placeholder="具体的な症状や予兆を入力..." class="condition-detail">{{ condition_detail_caution|default_if_none:'' }}</textarea>
                                     <div class="modal-buttons">
                                         <label class="modal-btn confirm-btn" for="close-modal-caution">確定</label>
                                     </div>
@@ -383,8 +293,7 @@
                         </div>
                     </div>
 
-                    <!-- CSSモーダル：× 不調選択時用 -->
-                    <!-- モーダル閉じる用ラジオボタン -->
+                    <!-- モーダル：悪化 -->
                     <input type="radio" name="modal-trigger" id="close-modal-poor" class="modal-close-trigger">
                     <div class="modal-overlay" id="modal-poor">
                         <div class="modal-content">
@@ -395,23 +304,10 @@
                             <div class="modal-body">
                                 <p class="modal-subtitle">具体的にどのような予兆がありますか？</p>
                                 {% if request.user.user_role == 2 %}
-                                    <!-- スタッフ用：読み取り専用表示 -->
-                                    <div class="condition-detail-view">
-                                        {% if condition_detail_poor %}
-                                            {{ condition_detail_poor }}
-                                        {% else %}
-                                            <span>記入なし</span>
-                                        {% endif %}
-                                    </div>
+                                    <div class="condition-detail-view">{% if condition_detail_poor %}{{ condition_detail_poor }}{% else %}<span>記入なし</span>{% endif %}</div>
                                     <input type="hidden" name="condition_detail_poor" value="{{ condition_detail_poor|default_if_none:'' }}">
                                 {% else %}
-                                    <!-- 利用者用：編集可能 -->
-                                    <textarea
-                                        name="condition_detail_poor"
-                                        id="condition-detail-poor"
-                                        placeholder="具体的な症状や不調な点を入力..."
-                                        class="condition-detail"
-                                    >{{ condition_detail_poor|default_if_none:'' }}</textarea>
+                                    <textarea name="condition_detail_poor" id="condition-detail-poor" placeholder="具体的な症状や不調な点を入力..." class="condition-detail">{{ condition_detail_poor|default_if_none:'' }}</textarea>
                                     <div class="modal-buttons">
                                         <label class="modal-btn confirm-btn" for="close-modal-poor">確定</label>
                                     </div>
@@ -434,13 +330,7 @@
                     <div class="medication-row">
                         <label for="{{ form.medication_morning.id_for_label }}" class="label-inline">朝</label>
                         <input type="hidden" name="{{ form.medication_morning.name }}" value="False">
-                        <input type="checkbox"
-                            name="{{ form.medication_morning.name }}"
-                            id="{{ form.medication_morning.id_for_label }}"
-                            value="True"
-                            {% if form.medication_morning.value %}checked{% endif %}
-                            {% if request.user.user_role == 2 %}disabled{% endif %}
-                        >
+                        <input type="checkbox" name="{{ form.medication_morning.name }}" id="{{ form.medication_morning.id_for_label }}" value="True" {% if form.medication_morning.value %}checked{% endif %} {% if request.user.user_role == 2 %}disabled{% endif %}>
                         {% if form.medication_morning.errors %}
                             <div class="error-message">{{ form.medication_morning.errors }}</div>
                         {% endif %}
@@ -448,14 +338,8 @@
 
                     <div class="medication-row">
                         <label for="{{ form.medication_noon.id_for_label }}" class="label-inline">昼</label>
-                            <input type="hidden" name="{{ form.medication_noon.name }}" value="False">
-                        <input type="checkbox"
-                            name="{{ form.medication_noon.name }}"
-                            id="{{ form.medication_noon.id_for_label }}"
-                            value="True"
-                            {% if form.medication_noon.value %}checked{% endif %}
-                            {% if request.user.user_role == 2 %}disabled{% endif %}
-                        >
+                        <input type="hidden" name="{{ form.medication_noon.name }}" value="False">
+                        <input type="checkbox" name="{{ form.medication_noon.name }}" id="{{ form.medication_noon.id_for_label }}" value="True" {% if form.medication_noon.value %}checked{% endif %} {% if request.user.user_role == 2 %}disabled{% endif %}>
                         {% if form.medication_noon.errors %}
                             <div class="error-message">{{ form.medication_noon.errors }}</div>
                         {% endif %}
@@ -463,14 +347,8 @@
 
                     <div class="medication-row">
                         <label for="{{ form.medication_night.id_for_label }}" class="label-inline">夜</label>
-                            <input type="hidden" name="{{ form.medication_night.name }}" value="False">
-                        <input type="checkbox"
-                            name="{{ form.medication_night.name }}"
-                            id="{{ form.medication_night.id_for_label }}"
-                            value="True"
-                            {% if form.medication_night.value %}checked{% endif %}
-                            {% if request.user.user_role == 2 %}disabled{% endif %}
-                        >
+                        <input type="hidden" name="{{ form.medication_night.name }}" value="False">
+                        <input type="checkbox" name="{{ form.medication_night.name }}" id="{{ form.medication_night.id_for_label }}" value="True" {% if form.medication_night.value %}checked{% endif %} {% if request.user.user_role == 2 %}disabled{% endif %}>
                         {% if form.medication_night.errors %}
                             <div class="error-message">{{ form.medication_night.errors }}</div>
                         {% endif %}
@@ -482,104 +360,79 @@
                     <div class="comment-fields-container">
                         <div class="comment-group">
                             <label for="{{ form.user_comment.id_for_label }}" class="button comment-button">利用者用</label>
-                            <textarea
-                                name="{{ form.user_comment.name }}"
-                                id="{{ form.user_comment.id_for_label }}"
-                                placeholder="利用者用のコメントを入力..."
-                                {% if form.user_comment.field.widget.attrs.disabled %}disabled{% endif %}
-                            >{{ form.user_comment.value|default_if_none:'' }}</textarea>
+                            <textarea name="{{ form.user_comment.name }}" id="{{ form.user_comment.id_for_label }}" placeholder="利用者用のコメントを入力..." {% if form.user_comment.field.widget.attrs.disabled %}disabled{% endif %}>{{ form.user_comment.value|default_if_none:'' }}</textarea>
                             {% if form.user_comment.errors %}
                                 <div class="error-message">{{ form.user_comment.errors }}</div>
                             {% endif %}
                             {% if request.user.user_role == 2 %}
-                                <input
-                                    type="hidden"
-                                    name="{{ form.user_comment.name }}"
-                                    value="{{ form.user_comment.value|default_if_none:'' }}"
-                                >
+                                <input type="hidden" name="{{ form.user_comment.name }}" value="{{ form.user_comment.value|default_if_none:'' }}">
                             {% endif %}
-                    </div>
+                        </div>
 
-                    <div class="comment-group">
-                        <label for="{{ form.staff_comment.id_for_label }}" class="button comment-button staff-comment-button">スタッフ用</label>
-                        <textarea
-                            name="{{ form.staff_comment.name }}"
-                            id="{{ form.staff_comment.id_for_label }}"
-                            placeholder="スタッフ用のコメントを入力..."
-                            {% if form.staff_comment.field.widget.attrs.disabled %}disabled{% endif %}
-                            >{{ form.staff_comment.value|default_if_none:'' }}</textarea>
-                        {% if form.staff_comment.errors %}
-                            <div class="error-message">{{ form.staff_comment.errors }}</div>
-                        {% endif %}
-                        {% if request.user.user_role == 1 %}
-                            <input
-                                type="hidden"
-                                name="{{ form.staff_comment.name }}"
-                                value="{{ form.staff_comment.value|default_if_none:'' }}"
-                            >
-                        {% endif %}
+                        <div class="comment-group">
+                            <label for="{{ form.staff_comment.id_for_label }}" class="button comment-button staff-comment-button">スタッフ用</label>
+                            <textarea name="{{ form.staff_comment.name }}" id="{{ form.staff_comment.id_for_label }}" placeholder="スタッフ用のコメントを入力..." {% if form.staff_comment.field.widget.attrs.disabled %}disabled{% endif %}>{{ form.staff_comment.value|default_if_none:'' }}</textarea>
+                            {% if form.staff_comment.errors %}
+                                <div class="error-message">{{ form.staff_comment.errors }}</div>
+                            {% endif %}
+                            {% if request.user.user_role == 1 %}
+                                <input type="hidden" name="{{ form.staff_comment.name }}" value="{{ form.staff_comment.value|default_if_none:'' }}">
+                            {% endif %}
+                        </div>
                     </div>
                     <button type="submit" class="button confirm-button">確定</button>
                 </div>
             </div>
-    </div>
 
-    <div class="pagination-container">
-        {% if request.user.user_role == 1 %}
-            <a href="{% url 'selfCare:calendar_list'%}"><button>戻る</button></a>
-        {% else %}
-            <a href="{% url 'selfCare:user_list' %}"><button>戻る</button></a>
-        {% endif %}
-    </div>
+            <!-- スタッフ用確認モーダル -->
+            {% if request.user.user_role == 2 %}
+                <input type="radio" name="modal-trigger" id="confirm-modal-trigger" class="modal-trigger-radio">
 
-    <!-- スタッフ用確認モーダル -->
-    {% if request.user.user_role == 2 %}
-        <!-- 確認ボタン用隠しラジオボタン -->
-        <input type="radio" name="modal-trigger" id="confirm-modal-trigger" class="modal-trigger-radio">
-
-        <div class="modal-overlay" id="confirm-modal">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h2>入力内容の確認</h2>
-                    <label class="modal-close" for="close-confirm-modal">✕</label>
-                </div>
-                <div class="modal-body">
-                    <h3>入力内容</h3>
-                    <div class="confirm-content">
-                        <p><strong>体調:</strong> {% if form.condition.value %}{{ form.condition.value }}{% else %}未選択{% endif %}</p>
-                        {% if form.condition.value == '〇' and condition_detail_good %}
-                            <p><strong>体調詳細 (良好):</strong> {{ condition_detail_good }}</p>
-                        {% endif %}
-                        {% if form.condition.value == '△' and condition_detail_caution %}
-                            <p><strong>体調詳細 (要注意):</strong> {{ condition_detail_caution }}</p>
-                        {% endif %}
-                        {% if form.condition.value == '✕' and condition_detail_poor %}
-                            <p><strong>体調詳細 (不調):</strong> {{ condition_detail_poor }}</p>
-                        {% endif %}
-                    </div>
-                    <div class="modal-buttons">
-                            <label class="modal-btn cancel-btn" for="close-confirm-modal">戻る</label>
+                <div class="modal-overlay" id="confirm-modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>入力内容の確認</h2>
+                            <label class="modal-close" for="close-confirm-modal">✕</label>
+                        </div>
+                        <div class="modal-body">
+                            <h3>入力内容</h3>
+                            <div class="confirm-content">
+                                <p><strong>体調:</strong> {% if form.condition.value %}{{ form.condition.value }}{% else %}未選択{% endif %}</p>
+                                {% if form.condition.value == '〇' and condition_detail_good %}
+                                    <p><strong>体調詳細 (良好):</strong> {{ condition_detail_good }}</p>
+                                {% endif %}
+                                {% if form.condition.value == '△' and condition_detail_caution %}
+                                    <p><strong>体調詳細 (要注意):</strong> {{ condition_detail_caution }}</p>
+                                {% endif %}
+                                {% if form.condition.value == '✕' and condition_detail_poor %}
+                                    <p><strong>体調詳細 (不調):</strong> {{ condition_detail_poor }}</p>
+                                {% endif %}
+                            </div>
+                            <div class="modal-buttons">
+                                <label class="modal-btn cancel-btn" for="close-confirm-modal">戻る</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
+
+                <input type="radio" name="modal-trigger" id="close-confirm-modal" class="modal-trigger-radio">
+            {% endif %}
+        </form> <!-- メインの入力フォーム終了 -->
+
+        <!-- メインフォームの外側に配置された「戻る」ボタン -->
+        <div class="pagination-container">
+            {% if request.user.user_role == 1 %}
+                <a href="{% url 'selfCare:calendar_list'%}"><button type="button">戻る</button></a>
+            {% else %}
+                <a href="{% url 'selfCare:user_list' %}"><button type="button">戻る</button></a>
+            {% endif %}
         </div>
 
-        <!-- モーダル閉じる用ラジオボタン -->
-        <input type="radio" name="modal-trigger" id="close-confirm-modal" class="modal-trigger-radio">
-    {% endif %}
-    <form method="post" action="{% url 'selfCare:logout' %}">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-primary logout-btn">ログアウト</button>
-    </form>
-
-    <!-- メインフォームの外に配置する -->
-    <div class="pagination-container">
-        {% if request.user.user_role == 1 %}
-            <a href="{% url 'selfCare:calendar_list'%}"><button type="button">戻る</button></a>
-        {% else %}
-            <a href="{% url 'selfCare:user_list' %}"><button type="button">戻る</button></a>
-        {% endif %}
+        <!-- ログアウトフォーム -->
+        <form method="post" action="{% url 'selfCare:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary logout-btn">ログアウト</button>
+        </form>
     </div>
-
 </body>
 </html>
