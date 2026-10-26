@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - {{ selected_date|date:"Y年m月d日" }}</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>{{ title }}</h1>
+        <p class="date-info">データ対象日: {{ selected_date|date:"Y年m月d日" }}</p>
+
+        <div class="chart-section">
+            <h2>{{ title }}の推移</h2>
+
+            {% if chart_image %}
+                <img src="{{ chart_image }}" alt="{{ title }}グラフ" class="chart-image">
+            {% else %}
+                <p class="no-data">過去31日間の{{ title }}データがありませんでした。</p>
+            {% endif %}
+        </div>
+
+        <div class="action-buttons">
+            <a href="{% url 'selfCare:calendar_list' %}" class="nav-link">カレンダー画面へ</a>
+        </div>
+        {% if user.is_staff or user.user_role == 2 %}
+                <a href="{% url 'selfCare:user_list' %}?date={{ selected_date|date:'Y-m-d' }}" class="nav-link">ユーザーリストへ</a>
+        {% endif %}
+    </div>
+</body>
+</html>

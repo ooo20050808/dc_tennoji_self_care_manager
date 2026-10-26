@@ -1,0 +1,580 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ selected_date|date:"Y年m月d日" }} の入力画面</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=20250310">
+</head>
+<body class="user-role-{{ request.user.user_role }} {% if form.condition.value %}return-visit{% else %}first-visit{% endif %}">
+    <div class="container">
+        <h1 class="date-header">入力画面</h1>
+        <h1 class="date-header">日付: {{ selected_date|date:"Y年m月d日" }}</h1>
+        <h2 class="user-name-header">利用者: {{ target_user_name }}</h2>
+        <div class="pagination-container">
+            {% if user_role == 2 %}
+                <a href="{% url 'selfCare:saturday_choice'%}" ><button>スタッフメニューへ</button></a>
+            {% else %}
+                <a href="{% url 'selfCare:detail_select'　home_screen_id=home_screen.id %}"><button>アクション選択画面へ</button></a>
+            {% endif %}
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="section input-section">
+
+                <div class="input-row">
+                    <label class="label-inline" for="{{ form.at_home.id_for_label }}">在宅</label>
+                    {{ form.at_home }}
+                    {% if form.at_home.errors %}
+                        <div class="error-message">{{ form.at_home.errors }}</div>
+                    {% endif %}
+                </div>
+
+                {% if not at_home_status and request.user.user_role == 1 %}
+                   <div class="input-row">
+                        <label class="label-inline">入室 (利用者入力)</label>
+                        <span class="time-input-group">
+                            <select
+                                name="entry_time"
+                                id="entry_time"
+                                {% if form.entry_time.field.widget.attrs.disabled or request.user.user_role == 2 %}disabled{% endif %}
+                            >
+                                <option value="" {% if not entry_time_display %}selected{% endif %}>--:--</option>
+                                {% for time_str in staff_leaving_time_choices %}
+                                    <option value="{{ time_str }}"
+                                        {% if entry_time_display == time_str %}selected{% endif %}
+                                        >{{ time_str }}</option>
+                                {% endfor %}
+                            </select>
+                        </span>
+                        {% if form.entry_time.errors %}
+                            <div class="error-message">{{ form.entry_time.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="input-row">
+                        <label class="label-inline" for="{{ form.leaving_time.id_for_label }}">退出 (利用者入力)</label>
+                        <span class="time-input-group">
+                            {# form.leaving_time をプルダウンとして手動でレンダリング #}
+                            <select
+                                name="{{ form.leaving_time.name }}"
+                                id="{{ form.leaving_time.id_for_label }}"
+                                {% if form.leaving_time.field.widget.attrs.disabled %}disabled{% endif %}
+                            >
+                                <option value="" {% if not leaving_time_display and not staff_leaving_time_display %}selected{% endif %}>--:--</option>
+                                {% for time_str in staff_leaving_time_choices %}
+                                    <option value="{{ time_str }}"
+                                        {% if at_home_status and staff_leaving_time_display == time_str %}selected{% endif %}
+                                        {% if not at_home_status and leaving_time_display == time_str %}selected{% endif %}
+                                        >{{ time_str }}</option>
+                                {% endfor %}
+                            </select>
+                        </span>
+                        {% if form.leaving_time.errors %}
+                            <div class="error-message">{{ form.leaving_time.errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if not at_home_status and request.user.user_role == 2 %}
+                   <div class="input-row">
+                        <label class="label-inline">入室 (利用者入力)</label>
+                        <span class="time-input-group">
+                            <select
+                                name="entry_time"
+                                id="entry_time"
+                                {% if form.entry_time.field.widget.attrs.disabled or request.user.user_role == 2 %}disabled{% endif %}
+                            >
+                                <option value="" {% if not entry_time_display %}selected{% endif %}>--:--</option>
+                                {% for time_str in staff_leaving_time_choices %}
+                                    <option value="{{ time_str }}"
+                                        {% if entry_time_display == time_str %}selected{% endif %}
+                                        >{{ time_str }}</option>
+                                {% endfor %}
+                            </select>
+                        </span>
+                    </div>
+
+                    <div class="input-row">
+                        <label class="label-inline">退出 (利用者入力)</label>
+                        <span class="time-input-group">
+                            <select
+                                name="{{ form.leaving_time.name }}"
+                                id="{{ form.leaving_time.id_for_label }}"
+                                {% if form.leaving_time.field.widget.attrs.disabled %}disabled{% endif %} {# disabled属性をビューで設定する #}
+                            >
+                                <option value="" {% if not leaving_time_display %}selected{% endif %}>--:--</option>
+                                {% for time_str in staff_leaving_time_choices %}
+                                    <option value="{{ time_str }}"
+                                        {% if leaving_time_display == time_str %}selected{% endif %}
+                                        >{{ time_str }}</option>
+                                {% endfor %}
+                            </select>
+                        </span>
+                    </div>
+                {% endif %}
+
+                {% if at_home_status %}
+                   <div class="input-row">
+                        <label class="label-inline">入室 (スタッフ入力)</label>
+                        <span class="time-input-group">
+                            <select
+                                name="staff_entry_time"
+                                id="staff_entry_time"
+                                {% if request.user.user_role == 1 %}disabled{% endif %}
+                            >
+                                <option value="" {% if not staff_entry_time_display %}selected{% endif %}>--:--</option>
+                                {% for time_str in staff_leaving_time_choices %}
+                                    <option value="{{ time_str }}"
+                                        {% if staff_entry_time_display == time_str %}selected{% endif %}
+                                        >{{ time_str }}</option>
+                                {% endfor %}
+                            </select>
+                        </span>
+                        {% if request.user.user_role == 2 and form.staff_entry_time.errors %}
+                            <div class="error-message">{{ form.staff_entry_time.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="input-row">
+                        <label class="label-inline">退出 (スタッフ入力)</label>
+                        <span class="time-input-group">
+                            <select
+                                name="{{ form.staff_leaving_time.name }}"
+                                id="{{ form.staff_leaving_time.id_for_label }}"
+                                {% if request.user.user_role == 1 %}disabled{% endif %}
+                            >
+                                <option value="" {% if not staff_leaving_time_display %}selected{% endif %}>--:--</option>
+                                {% for time_str in staff_leaving_time_choices %}
+                                    <option value="{{ time_str }}"
+                                        {% if staff_leaving_time_display == time_str %}selected{% endif %}
+                                        >{{ time_str }}</option>
+                                {% endfor %}
+                            </select>
+                        </span>
+                        {% if request.user.user_role == 2 and form.staff_leaving_time.errors %}
+                            <div class="error-message">{{ form.staff_leaving_time.errors }}</div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                <div class="comment-group">
+                    <label for="morning_work_content" class="button comment-button">午前作業内容</label>
+                    <textarea
+                        name="morning_work_content"
+                        id="morning_work_content"
+                        placeholder="午前の作業内容を入力..."
+                        {% if request.user.user_role == 2 %}disabled{% endif %}
+                    >{{ morning_work_content|default_if_none:'' }}</textarea>
+                    {% if request.user.user_role == 2 %}
+                        <input
+                            type="hidden"
+                            name="morning_work_content"
+                            value="{{ morning_work_content|default_if_none:'' }}"
+                        >
+                    {% endif %}
+                </div>
+
+                <div class="comment-group">
+                    <label for="afternoon_work_content" class="button comment-button">午後作業内容</label>
+                    <textarea
+                        name="afternoon_work_content"
+                        id="afternoon_work_content"
+                        placeholder="午後の作業内容を入力..."
+                        {% if request.user.user_role == 2 %}disabled{% endif %}
+                    >{{ afternoon_work_content|default_if_none:'' }}</textarea>
+                    {% if request.user.user_role == 2 %}
+                        <input
+                            type="hidden"
+                            name="afternoon_work_content"
+                            value="{{ afternoon_work_content|default_if_none:'' }}"
+                        >
+                    {% endif %}
+                </div>
+
+                <div class="input-row">
+                    <label class="label-inline" for="{{ form.sleep_time_hours.id_for_label }}">睡眠時間</label>
+                    <input
+                        type="number"
+                        name="{{ form.sleep_time_hours.name }}"
+                        id="{{ form.sleep_time_hours.id_for_label }}"
+                        min="0"
+                        max="24"
+                        value="{{ form.sleep_time_hours.value|default_if_none:'' }}"
+                        {% if request.user.user_role == 2 %}disabled{% endif %}
+                    >
+                    {% if form.sleep_time_hours.errors %}
+                        <div class="error-message">{{ form.sleep_time_hours.errors }}</div>
+                    {% endif %}
+                    {% if request.user.user_role == 2 %}
+                        <input type="hidden" name="{{ form.sleep_time_hours.name }}" value="{{ form.sleep_time_hours.value|default_if_none:'' }}">
+                    {% endif %}
+                </div>
+
+                <!-- 体調入力：ラジオボタンと詳細入力モーダル連携 -->
+                <div class="input-row">
+                    <label class="label-heading">体調</label>
+
+                    <!-- モーダル表示ボタン（リターンビジター用） -->
+                    {% if request.user.user_role == 1 and form.condition.value %}
+                        <input type="radio" name="modal-trigger" id="show-modal-trigger" class="modal-trigger-radio">
+                        <label for="show-modal-trigger" class="modal-show-button">体調詳細を入力</label>
+                    {% endif %}
+
+                    <!-- ラジオボタン選択肢 -->
+                    {% if request.user.user_role == 2 %}
+                        <!-- スタッフ用：ラジオボタンを無効化 -->
+                        <input
+                            type="radio"
+                            name="{{ form.condition.name }}"
+                            value="〇"
+                            id="condition-good"
+                            {% if form.condition.value == '〇' %}checked{% endif %}
+                            disabled
+                        >
+                        <input
+                            type="radio"
+                            name="{{ form.condition.name }}"
+                            value="△"
+                            id="condition-caution"
+                            {% if form.condition.value == '△' %}checked{% endif %}
+                            disabled
+                        >
+                        <input
+                            type="radio"
+                            name="{{ form.condition.name }}"
+                            value="✕"
+                            id="condition-poor"
+                            {% if form.condition.value == '✕' %}checked{% endif %}
+                            disabled
+                        >
+                    {% else %}
+                        <!-- 利用者用：通常のラジオボタン -->
+                        <input
+                            type="radio"
+                            name="{{ form.condition.name }}"
+                            value="〇"
+                            id="condition-good"
+                            {% if form.condition.value == '〇' %}checked{% endif %}
+                        >
+                        <input
+                            type="radio"
+                            name="{{ form.condition.name }}"
+                            value="△"
+                            id="condition-caution"
+                            {% if form.condition.value == '△' %}checked{% endif %}
+                        >
+                        <input
+                            type="radio"
+                            name="{{ form.condition.name }}"
+                            value="✕"
+                            id="condition-poor"
+                            {% if form.condition.value == '✕' %}checked{% endif %}
+                        >
+                    {% endif %}
+
+                    {% if request.user.user_role == 2 %}
+                        {% if form.condition.value %}
+                            <label for="confirm-modal-trigger" class="button confirm-modal-button">確認</label>
+                        {% endif %}
+                    {% endif %}
+
+                    <div class="condition-options">
+                        {% if request.user.user_role == 2 %}
+                            <!-- スタッフ用：ラベルとして表示 -->
+                            <div class="condition-option">
+                                <span class="option-label">○ 良好</span>
+                            </div>
+                            <div class="condition-option">
+                                <span class="option-label">△ 注意</span>
+                            </div>
+                            <div class="condition-option">
+                                <span class="option-label">× 悪化</span>
+                            </div>
+                        {% else %}
+                            <!-- 利用者用：クリック可能なラベル -->
+                            <label class="condition-option" for="condition-good">
+                                <span class="option-label">○ 良好</span>
+                            </label>
+
+                            <label class="condition-option" for="condition-caution">
+                                <span class="option-label">△ 注意</span>
+                            </label>
+
+                            <label class="condition-option" for="condition-poor">
+                                <span class="option-label">× 悪化</span>
+                            </label>
+                        {% endif %}
+                    </div>
+
+                    <!-- CSSモーダル：○ 良好選択時用 -->
+                    <!-- モーダル閉じる用ラジオボタン -->
+                    <input type="radio" name="modal-trigger" id="close-modal-good" class="modal-close-trigger">
+                    <div class="modal-overlay" id="modal-good">
+                        <div class="modal-content">
+                            <div class="modal-header modal-header-good">
+                                <h2><span class="condition-icon condition-icon-good">○</span></h2>
+                                <label class="modal-close" for="close-modal-good">✕</label>
+                            </div>
+                            <div class="modal-body">
+                                <p class="modal-subtitle">体調が良好な理由や、気づいたことがあればお聞かせください。</p>
+                                {% if request.user.user_role == 2 %}
+                                    <!-- スタッフ用：読み取り専用表示 -->
+                                    <div class="condition-detail-view">
+                                        {% if condition_detail_good %}
+                                            {{ condition_detail_good }}
+                                        {% else %}
+                                            <span>記入なし</span>
+                                        {% endif %}
+                                    </div>
+                                    <input type="hidden" name="condition_detail_good" value="{{ condition_detail_good|default_if_none:'' }}">
+                                {% else %}
+                                    <!-- 利用者用：編集可能 -->
+                                    <textarea
+                                        name="condition_detail_good"
+                                        id="condition-detail-good"
+                                        placeholder="体調が良い理由や詳細情報を入力..."
+                                        class="condition-detail"
+                                    >{{ condition_detail_good|default_if_none:'' }}</textarea>
+                                    <div class="modal-buttons">
+                                        <label class="modal-btn confirm-btn" for="close-modal-good">確定</label>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CSSモーダル：△ 要注意選択時用 -->
+                    <!-- モーダル閉じる用ラジオボタン -->
+                    <input type="radio" name="modal-trigger" id="close-modal-caution" class="modal-close-trigger">
+                    <div class="modal-overlay" id="modal-caution">
+                        <div class="modal-content">
+                            <div class="modal-header modal-header-caution">
+                                <h2><span class="condition-icon condition-icon-caution">△</span></h2>
+                                <label class="modal-close" for="close-modal-caution">✕</label>
+                            </div>
+                            <div class="modal-body">
+                                <p class="modal-subtitle">具体的にどのような予兆がありますか？</p>
+                                {% if request.user.user_role == 2 %}
+                                    <!-- スタッフ用：読み取り専用表示 -->
+                                    <div class="condition-detail-view">
+                                        {% if condition_detail_caution %}
+                                            {{ condition_detail_caution }}
+                                        {% else %}
+                                            <span>記入なし</span>
+                                        {% endif %}
+                                    </div>
+                                    <input type="hidden" name="condition_detail_caution" value="{{ condition_detail_caution|default_if_none:'' }}">
+                                {% else %}
+                                    <!-- 利用者用：編集可能 -->
+                                    <textarea
+                                        name="condition_detail_caution"
+                                        id="condition-detail-caution"
+                                        placeholder="具体的な症状や予兆を入力..."
+                                        class="condition-detail"
+                                    >{{ condition_detail_caution|default_if_none:'' }}</textarea>
+                                    <div class="modal-buttons">
+                                        <label class="modal-btn confirm-btn" for="close-modal-caution">確定</label>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CSSモーダル：× 不調選択時用 -->
+                    <!-- モーダル閉じる用ラジオボタン -->
+                    <input type="radio" name="modal-trigger" id="close-modal-poor" class="modal-close-trigger">
+                    <div class="modal-overlay" id="modal-poor">
+                        <div class="modal-content">
+                            <div class="modal-header modal-header-poor">
+                                <h2><span class="condition-icon condition-icon-poor">×</span></h2>
+                                <label class="modal-close" for="close-modal-poor">✕</label>
+                            </div>
+                            <div class="modal-body">
+                                <p class="modal-subtitle">具体的にどのような予兆がありますか？</p>
+                                {% if request.user.user_role == 2 %}
+                                    <!-- スタッフ用：読み取り専用表示 -->
+                                    <div class="condition-detail-view">
+                                        {% if condition_detail_poor %}
+                                            {{ condition_detail_poor }}
+                                        {% else %}
+                                            <span>記入なし</span>
+                                        {% endif %}
+                                    </div>
+                                    <input type="hidden" name="condition_detail_poor" value="{{ condition_detail_poor|default_if_none:'' }}">
+                                {% else %}
+                                    <!-- 利用者用：編集可能 -->
+                                    <textarea
+                                        name="condition_detail_poor"
+                                        id="condition-detail-poor"
+                                        placeholder="具体的な症状や不調な点を入力..."
+                                        class="condition-detail"
+                                    >{{ condition_detail_poor|default_if_none:'' }}</textarea>
+                                    <div class="modal-buttons">
+                                        <label class="modal-btn confirm-btn" for="close-modal-poor">確定</label>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if form.condition.errors %}
+                        <div class="error-message">{{ form.condition.errors }}</div>
+                    {% endif %}
+                    {% if request.user.user_role == 2 %}
+                        <input type="hidden" name="{{ form.condition.name }}" value="{{ form.condition.value|default_if_none:'' }}">
+                    {% endif %}
+                </div>
+
+                <div class="medication-group">
+                    <label class="label-heading">服薬</label>
+
+                    <div class="medication-row">
+                        <label for="{{ form.medication_morning.id_for_label }}" class="label-inline">朝</label>
+                        <input type="hidden" name="{{ form.medication_morning.name }}" value="False">
+                        <input type="checkbox"
+                            name="{{ form.medication_morning.name }}"
+                            id="{{ form.medication_morning.id_for_label }}"
+                            value="True"
+                            {% if form.medication_morning.value %}checked{% endif %}
+                            {% if request.user.user_role == 2 %}disabled{% endif %}
+                        >
+                        {% if form.medication_morning.errors %}
+                            <div class="error-message">{{ form.medication_morning.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="medication-row">
+                        <label for="{{ form.medication_noon.id_for_label }}" class="label-inline">昼</label>
+                            <input type="hidden" name="{{ form.medication_noon.name }}" value="False">
+                        <input type="checkbox"
+                            name="{{ form.medication_noon.name }}"
+                            id="{{ form.medication_noon.id_for_label }}"
+                            value="True"
+                            {% if form.medication_noon.value %}checked{% endif %}
+                            {% if request.user.user_role == 2 %}disabled{% endif %}
+                        >
+                        {% if form.medication_noon.errors %}
+                            <div class="error-message">{{ form.medication_noon.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="medication-row">
+                        <label for="{{ form.medication_night.id_for_label }}" class="label-inline">夜</label>
+                            <input type="hidden" name="{{ form.medication_night.name }}" value="False">
+                        <input type="checkbox"
+                            name="{{ form.medication_night.name }}"
+                            id="{{ form.medication_night.id_for_label }}"
+                            value="True"
+                            {% if form.medication_night.value %}checked{% endif %}
+                            {% if request.user.user_role == 2 %}disabled{% endif %}
+                        >
+                        {% if form.medication_night.errors %}
+                            <div class="error-message">{{ form.medication_night.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="section comment-section">
+                    <h2>コメント</h2>
+                    <div class="comment-fields-container">
+                        <div class="comment-group">
+                            <label for="{{ form.user_comment.id_for_label }}" class="button comment-button">利用者用</label>
+                            <textarea
+                                name="{{ form.user_comment.name }}"
+                                id="{{ form.user_comment.id_for_label }}"
+                                placeholder="利用者用のコメントを入力..."
+                                {% if form.user_comment.field.widget.attrs.disabled %}disabled{% endif %}
+                            >{{ form.user_comment.value|default_if_none:'' }}</textarea>
+                            {% if form.user_comment.errors %}
+                                <div class="error-message">{{ form.user_comment.errors }}</div>
+                            {% endif %}
+                            {% if request.user.user_role == 2 %}
+                                <input
+                                    type="hidden"
+                                    name="{{ form.user_comment.name }}"
+                                    value="{{ form.user_comment.value|default_if_none:'' }}"
+                                >
+                            {% endif %}
+                    </div>
+
+                    <div class="comment-group">
+                        <label for="{{ form.staff_comment.id_for_label }}" class="button comment-button staff-comment-button">スタッフ用</label>
+                        <textarea
+                            name="{{ form.staff_comment.name }}"
+                            id="{{ form.staff_comment.id_for_label }}"
+                            placeholder="スタッフ用のコメントを入力..."
+                            {% if form.staff_comment.field.widget.attrs.disabled %}disabled{% endif %}
+                            >{{ form.staff_comment.value|default_if_none:'' }}</textarea>
+                        {% if form.staff_comment.errors %}
+                            <div class="error-message">{{ form.staff_comment.errors }}</div>
+                        {% endif %}
+                        {% if request.user.user_role == 1 %}
+                            <input
+                                type="hidden"
+                                name="{{ form.staff_comment.name }}"
+                                value="{{ form.staff_comment.value|default_if_none:'' }}"
+                            >
+                        {% endif %}
+                    </div>
+
+                    <form method="post" action="{% url 'selfCare:complete_screen' home_screen_id=home_screen_id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="button confirm-button">確定</button>
+                    </form>
+                </div>
+            </div>
+    </div>
+
+    <div class="pagination-container">
+        {% if request.user.user_role == 1 %}
+            <a href="{% url 'selfCare:calendar_list'%}"><button>戻る</button></a>
+        {% else %}
+            <a href="{% url 'selfCare:user_list' %}"><button>戻る</button></a>
+        {% endif %}
+    </div>
+
+    <!-- スタッフ用確認モーダル -->
+    {% if request.user.user_role == 2 %}
+        <!-- 確認ボタン用隠しラジオボタン -->
+        <input type="radio" name="modal-trigger" id="confirm-modal-trigger" class="modal-trigger-radio">
+
+        <div class="modal-overlay" id="confirm-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>入力内容の確認</h2>
+                    <label class="modal-close" for="close-confirm-modal">✕</label>
+                </div>
+                <div class="modal-body">
+                    <h3>入力内容</h3>
+                    <div class="confirm-content">
+                        <p><strong>体調:</strong> {% if form.condition.value %}{{ form.condition.value }}{% else %}未選択{% endif %}</p>
+                        {% if form.condition.value == '〇' and condition_detail_good %}
+                            <p><strong>体調詳細 (良好):</strong> {{ condition_detail_good }}</p>
+                        {% endif %}
+                        {% if form.condition.value == '△' and condition_detail_caution %}
+                            <p><strong>体調詳細 (要注意):</strong> {{ condition_detail_caution }}</p>
+                        {% endif %}
+                        {% if form.condition.value == '✕' and condition_detail_poor %}
+                            <p><strong>体調詳細 (不調):</strong> {{ condition_detail_poor }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="modal-buttons">
+                            <label class="modal-btn cancel-btn" for="close-confirm-modal">戻る</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- モーダル閉じる用ラジオボタン -->
+        <input type="radio" name="modal-trigger" id="close-confirm-modal" class="modal-trigger-radio">
+    {% endif %}
+    <form method="post" action="{% url 'selfCare:logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary logout-btn">ログアウト</button>
+    </form>
+
+</body>
+</html>

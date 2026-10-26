@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: self-care-automation
+    env: python
+    region: singapore
+    plan: free
+    buildCommand: "pip install -r requirements.txt && python manage.py migrate"
+    startCommand: "PYTHONPATH=. gunicorn self_care_automation.wsgi:application --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: DEBUG
+        value: False
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: self-care-db
+          property: connectionString
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+databases:
+  - name: self-care-db
+    databaseName: self_care_automation
+    user: self_care_user
+    plan: free

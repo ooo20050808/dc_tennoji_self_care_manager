@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>土曜開所日 登録</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>土曜開所日 登録画面</h1>
+
+        <form method="post" action="{% url 'selfCare:saturday_register' %}">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="errorlist">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                {{ form.date_list.label_tag }}
+                {{ form.date_list }}
+                {% for error in form.date_list.errors %} <span class="field-error">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <button type="submit" class="submit-button">登録</button>
+        </form>
+
+        <a href="{% url 'selfCare:saturday_choice' %}" class="nav-link">戻る</a>
+
+        <div class="help-text">
+            <h3>対応している日付形式:</h3>
+            <ul>
+                <li>2026-02-03（ハイフン区切り）</li>
+                <li>2026/02/03（スラッシュ区切り）</li>
+                <li>2026/2/3（ゼロなし）</li>
+                <li>２０２６／０２／０３（全角）</li>
+                <li>２０２６・０２・０３（中黒区切り）</li>
+            </ul>
+            <p>カンマ、スペース、または改行で複数の日付を区切って入力できます。</p>
+        </div>
+
+    </div>
+</body>
+</html>

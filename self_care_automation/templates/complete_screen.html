@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登録完了</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    </head>
+<body>
+    <div class="container complete-screen-container">
+        <h1 class="my-4">登録完了画面</h1>
+
+        <div class="alert alert-success" role="alert">
+            {{ selected_date|date:"Y年m月d日" }} の入室・退出時刻の登録が完了しました。
+        </div>
+
+        {% if user_role == 1 %}
+            <h2 class="mt-5 mb-3">データ推移グラフ</h2>
+
+            {% if sleep_chart_image or condition_chart_image %}
+                <p>過去30日間のデータ推移を確認できます。</p>
+            {% else %}
+                <p class="text-muted">過去30日間のデータが不足しているため、グラフは表示されません。</p>
+            {% endif %}
+
+            <div class="complete-screen-chart-container">
+            {% if sleep_chart_image %}
+                <div class="card complete-screen-chart">
+                    <div class="card-header">睡眠時間グラフ</div>
+                    <div class="card-body">
+                        <img src="{{ sleep_chart_image }}" alt="睡眠時間のグラフ" class="img-fluid">
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if condition_chart_image %}
+                <div class="card complete-screen-chart">
+                    <div class="card-header">体調グラフ</div>
+                    <div class="card-body">
+                        <img src="{{ condition_chart_image }}" alt="体調のグラフ" class="img-fluid">
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <p class="text-muted">あなたの権限ではデータ登録完了後のグラフ表示は行われません。</p>
+        {% endif %}
+
+        <div class="mt-4">
+            <a href="{% url 'selfCare:calendar_list' %}" class="nav-link">カレンダー画面へ</a>
+            {% if user_role == 2 %}
+                <a href="{% url 'selfCare:saturday_choice'%}" class="nav-link">スタッフメニューへ</a>
+            {% else %}
+                <a href="{% url 'selfCare:detail_select'　home_screen_id=home_screen.id %}" class="nav-link">アクション選択画面へ</a>
+            {% endif %}
+            <form action="{% url 'selfCare:logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="button button-secondary">ログアウト</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,51 @@
+{%load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>土曜開所日 削除の確認</title>
+     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container confirm-container">
+        <h1>土曜開所日 削除の確認画面</h1>
+
+    {% if dates_to_delete %}
+        <div>
+            以下の {{ delete_count }} 件の日付を本当に削除しますか？ この操作は元に戻せません。
+        </div>
+
+        <div class="deletion-target">削除対象の日付:</div>
+        <table class="target-table">
+            {% for date in dates_to_delete %}
+                <tr>
+                    <td class="label-cell">日付</td>
+                    <td class="value-cell">{{ date.open_date|date:"Y年m月d日" }}</td>
+                </tr>
+                <tr>
+                    <td class="label-cell">登録者</td>
+                    <td class="value-cell">{{ date.registered_by.user_name|default:"N/A" }}</td>
+                </tr>
+            {% endfor %}
+        </table>
+
+        <br>
+        <form method="post" action="{% url 'selfCare:saturday_delete_confirm' %}" class="confirmation-form">
+            {% csrf_token %}
+            <button type="submit" class="btn-delete">削除を実行</button>
+        </form>
+
+        <br>
+        <p><a href="{% url 'selfCare:saturday_list_delete' %}" class="nav-link">一覧に戻り選択し直す</a></p>
+
+    {% else %}
+        <div>
+            削除対象の日付が確認できませんでした。
+        </div>
+        <br>
+        <p><a href="{% url 'selfCare:saturday_list_delete' %}" class="btn-cancel">削除対象選択画面へ</a></p>
+    {% endif %}
+
+</body>
+</html>

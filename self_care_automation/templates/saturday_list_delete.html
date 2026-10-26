@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>土曜開所日 削除対象選択</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="main-content">
+        <div class="page-header">
+            <h1>土曜開所日 削除対象選択画面</h1>
+        </div>
+
+    {% if saturday_openings %}
+        <form method="post" action="{% url 'selfCare:saturday_list_delete' %}">
+            {% csrf_token %}
+
+            <p>削除したい土曜開所日をチェックしてください。</p>
+
+            {% if form.selected_openings.errors %}
+                <div
+                    {% for error in form.selected_openings.errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <table >
+                <thead>
+                    <tr>
+                        <th>削除</th>
+                        <th>日付</th>
+                        <th>登録スタッフ</th>
+                        <th>登録日時</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in saturday_openings %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" name="selected_openings" value="{{ item.id }}" id="id_selected_openings_{{ forloop.counter }}">
+                        </td>
+                        <td>{{ item.open_date|date:"Y年m月d日" }} ({{ item.open_date }})</td>
+                        <td>{{ item.registered_by.user_name|default:"N/A" }}</td>
+                        <td>{{ item.registered_at|date:"Y-m-d H:i" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <br>
+            <button type="submit">選択した日付の削除を確認</button>
+        </form>
+    {% else %}
+        <h2>現在、登録されている土曜開所日はありません。</h2>
+    {% endif %}
+
+    <hr>
+    <p><a href="{% url 'selfCare:saturday_choice' %}">スタッフメニューへ</a></p>
+</body>
+</html>

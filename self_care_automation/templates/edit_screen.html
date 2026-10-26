@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ユーザー情報編集</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>ユーザー情報編集画面</h1>
+        <p>対象ユーザー: {{ target_user.user_name }}</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-group">
+              {% for field in form %}
+                <p>
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <span class="errorlist">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                    {# field.help_text を削除することでヘルプテキストの表示を回避 #}
+                </p>
+              {% endfor %}
+            </div>
+            <div class="button-column">
+                <button type="submit" class="button button-primary">確認画面へ</button>
+                 <a href="{% url 'selfCare:admin_screen' %}" class="button button-primary">管理者画面に戻る</a>
+                <a href="{% url 'selfCare:user_list' %}" class="button button-secondary">ユーザーリストへ戻る</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,51 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ target_user.user_name }}さんのコメント一覧</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>{{ target_user.user_name }}さんのコメント一覧</h1>
+        <h2>{{ selected_date|date:"Y年m月d日" }}までの過去30日間</h2>
+        <a href="{% url 'selfCare:calendar_list' %}" class="nav-link">カレンダー画面へ</a>
+
+        {% if comment_data %}
+            <div class="comment-list">
+                {% for data in comment_data %}
+                    <div class="comment-item">
+                        <p class="comment-date">{{ data.date.date|date:"Y/m/d" }}</p>
+
+                        {% if data.user_comment %}
+                            <div class="comment user-comment">
+                                <span class="comment-label">利用者コメント:</span>
+                                <p>{{ data.user_comment|linebreaksbr }}</p>
+                            </div>
+                        {% endif %}
+
+                        {% if data.staff_comment %}
+                            <div class="comment staff-comment">
+                                <span class="comment-label">スタッフコメント:</span>
+                                <p>{{ data.staff_comment|linebreaksbr }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="no-data-message">該当するコメントの記録はありません。</p>
+        {% endif %}
+
+        <div class="nav-link">
+            <a href="{% url 'selfCare:detail_select'　home_screen_id=home_screen.id %}">アクション選択画面へ</a>
+        </div>
+        <form method="post" action="{% url 'selfCare:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="text-link logout-btn">ログアウト</button>
+        </form>
+    </div>
+</body>
+</html>

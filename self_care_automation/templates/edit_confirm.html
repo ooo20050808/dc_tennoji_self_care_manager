@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>編集内容確認</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container confirm-container">
+        <h1>編集内容確認画面</h1>
+        <p>以下の内容でユーザー情報を更新します。よろしいですか？</p>
+
+        <div class="confirm-data">
+            <p><strong>ユーザー名:</strong> {{ edit_data.user_name }}</p>
+            <p><strong>メールアドレス:</strong> {{ edit_data.email }}</p>
+            {% if edit_data.password %}
+                <p><strong>パスワード:</strong> 変更あり</p>
+            {% else %}
+                <p><strong>パスワード:</strong> 変更なし</p>
+            {% endif %}
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-actions">
+                <button type="submit" name="action" value="confirm" class="button button-primary">更新</button>
+                <button type="submit" name="action" value="back" class="button button-secondary">戻る</button>
+            </div>
+        </form>
+         <div class="button-row">
+            <a href="{% url 'selfCare:admin_screen' %}" class="button button-primary">管理者画面に戻る</a>
+        </div>
+    </div>
+</body>
+</html>

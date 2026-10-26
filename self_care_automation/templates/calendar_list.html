@@ -1,0 +1,93 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>カレンダー</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+<div class="calendar-container">
+    <h1>カレンダー画面</h1>
+    <div class="calendar-header">
+        <a href="{% url 'selfCare:calendar_list' %}{{ prev_month_url }}"></a>
+         <h3 id="current-month-year">{{ current_month_year|date:"Y年 n月" }}</h3>
+        <a href="{% url 'selfCare:calendar_list' %}{{ next_month_url }}"></a>
+    </div>
+
+    <div class="user-name-display">
+        <div class="role-display">
+        {% if user_role == 1 %}
+            <h3>利用者</h3>
+            <span>{{ user.user_name }}</span>
+        {% elif user_role == 2 %}
+            <h3>スタッフ</h3>
+            <span>{{ user.user_name }}</span>
+        {% endif %}
+        </div>
+    </div>
+    <div class="calendar-grid-header">
+        <div>日</div>
+        <div>月</div>
+        <div>火</div>
+        <div>水</div>
+        <div>木</div>
+        <div>金</div>
+        <div>土</div>
+    </div>
+    <div id="calendar-grid" class="calendar-grid">
+        {% for week in month_days_annotated %}
+            {% for day_data in week %}
+                {% comment %} day_data は {'date': date, 'is_saturday': bool, 'is_open_saturday': bool} の辞書 {% endcomment %}
+
+                {% comment %}day_data.date を使用して日付オブジェクトを取得 {% endcomment %}
+                {% with day=day_data.date %}
+                    {% if day.month == month %}
+                        {% comment %}
+                        クラスの判定ロジック:
+                        1. 開所土曜日: 'open-saturday' (赤表示)
+                        2. 休業土曜日: 'closed-saturday' (入力不可を示すグレー表示)
+                        3. 今日: 'today'
+                        {% endcomment %}
+                        <a href="{% url 'selfCare:calendar_detail' year=day.year month=day.month day=day.day %}"
+                           class="calendar-day
+                           {% if day_data.is_open_saturday %}open-saturday{% endif %}
+                           {% if day_data.is_saturday and not day_data.is_open_saturday %}closed-saturday{% endif %}
+                           {% if day_data.is_input_complete %}input-complete{% endif %}
+                           {% if day_data.date == current_month_year %}today{% endif %}
+                           ">
+                            {% comment %} 💡 修正点: 日付の表示を day.day (または day_data.date.day) に変更 {% endcomment %}
+                            {{ day.day }}
+                        </a>
+                    {% else %}
+                        <span class="calendar-day other-month-day">
+                            {% comment %} 💡 修正点: 日付の表示を day.day (または day_data.date.day) に変更 {% endcomment %}
+                            {{ day.day }}
+                        </span>
+                    {% endif %}
+                {% endwith %}
+            {% endfor %}
+        {% endfor %}
+    </div>
+
+    <div class="pagination-container">
+        <a href="{% url 'selfCare:calendar_list' %}{{ prev_month_url }}"><button>前の月</button></a>
+        <a  href="{% url 'selfCare:calendar_list' %}{{ next_month_url }}" class="pagination-spacer"><button>次の月</button></a>
+    </div>
+
+    <div class="action-menu-container">
+        {% if user_role == 2 %}
+            <a href="{% url 'selfCare:saturday_choice'%}"><button>スタッフメニューへ</button></a>
+        {% else %}
+            <a href="{% url 'selfCare:detail_select' home_screen_id=home_screens.0.id %}"><button>アクション選択画面へ</button></a>
+        {% endif %}
+    </div>
+
+     <form action="{% url 'selfCare:logout' %}" method="post" >
+            {% csrf_token %}
+            <button type="submit" class="button button-secondary">ログアウト</button>
+     </form>
+</div>
+</body>
+</html>

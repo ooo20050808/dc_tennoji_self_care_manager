@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理者画面</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=1.1">
+</head>
+<body>
+    <div class="container">
+        <h1>管理者画面</h1>
+
+        <div class="button-container">
+            <a href="{% url 'selfCare:admin_auth' %}" class="nav-link">新規作成</a>
+
+           {% if target_user %}
+                <!-- ユーザーリストから特定のユーザーを選択して管理者画面に来た場合 -->
+                <a href="{% url 'selfCare:admin_auth_action' user_id=target_user.id action='edit' %}" class="nav-link">編集</a>
+                <a href="{% url 'selfCare:admin_auth_action' user_id=target_user.id action='delete' %}" class="nav-link">削除</a>
+            {% else %}
+                <!-- 【修正】通常の管理者メニューから来た場合、actionを持たせてユーザーリストへ送る -->
+                <a href="{% url 'selfCare:user_list' action='edit' %}" class="nav-link">編集</a>
+                <a href="{% url 'selfCare:user_list' action='delete' %}" class="nav-link">削除</a>
+            {% endif %}
+        </div>
+        <form method="post" action="{% url 'selfCare:logout' %}" >
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">ログアウト</button>
+        </form>
+    </div>
+</body>
+</html>

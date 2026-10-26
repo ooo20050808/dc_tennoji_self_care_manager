@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登録完了</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>登録完了画面</h1>
+
+        <p>{{ message }}</p>
+
+        <div class="navigation">
+            <a href="{% url 'selfCare:saturday_choice' %}" class="nav-link">スタッフメニューへ</a>
+            <a href="{% url 'selfCare:calendar_list' %}" class="nav-link">カレンダー画面へ</a>
+        </div>
+        <form method="post" action="{% url 'selfCare:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn">ログアウト</button>
+        </form>
+    </div>
+</body>
+</html>

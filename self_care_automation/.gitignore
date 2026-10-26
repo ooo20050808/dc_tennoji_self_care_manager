@@ -1,0 +1,15 @@
+# 仮想環境・キャッシュ
+.venv/
+Lib/
+**/__pycache__/
+*.pyc
+
+# PyCharm設定
+.idea/
+**/ .idea/
+
+# 機密情報
+.env
+
+# 静岡・ビルドファイル等（必要に応じて）
+staticfiles/

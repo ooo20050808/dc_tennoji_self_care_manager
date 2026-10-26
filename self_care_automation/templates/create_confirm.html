@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新規ユーザー作成内容確認</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container confirm-container">
+        <h1>新規ユーザー作成内容確認画面</h1>
+
+        {% if create_data %}
+            <div class="data-display">
+                <dl>
+                    <dt>メールアドレス (Email)</dt>
+                    <dd>{{ create_data.email }}</dd>
+
+                    <dt>ユーザー名 (User Name)</dt>
+                    <dd>{{ create_data.user_name }}</dd>
+
+                    <dt>権限 (User Role)</dt>
+                    <dd>
+                        {% if create_data.user_role == 1 %}利用者
+                        {% elif create_data.user_role == 2 %}スタッフ
+                        {% elif create_data.user_role == 3 %}管理者
+                        {% else %}未定義
+                        {% endif %}
+                    </dd>
+
+                    <dt>パスワード</dt>
+                    <dd>*******</dd>
+                </dl>
+            </div>
+
+            <form method="post" class="form-actions">
+                {% csrf_token %}
+                <button type="submit" name="action" value="confirm" class="button primary">作成</button>
+                <button type="submit" name="action" value="back" class="button secondary">戻る</button>
+            </form>
+         <div class="button-row">
+                        <a href="{% url 'selfCare:admin_screen' %}" class="button button-primary">管理者画面に戻る</a>
+                    </div>
+        {% else %}
+            <p class="error">作成データが存在しません。</p>
+            <p class="link-area"><a href="{% url 'selfCare:user_create_screen' %}">新規作成画面に戻る</a></p>
+        {% endif %}
+
+    </div>
+</body>
+</html>

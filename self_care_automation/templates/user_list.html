@@ -1,0 +1,199 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ユーザー一覧</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}?v=1.1">
+</head>
+<body>
+    <div class="container">
+        {% if user_role == 2 %}
+        <h1>ユーザーリスト</h1>
+         <h2>利用者一覧</h2>
+        <h1 class="date-display"> {{ view_date|date:"Y年m月d日" }}</h1>
+            {% for page in user_pages %}
+                <div class="table-container">
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th>ユーザー名</th>
+                                <th>在宅</th>
+                                <th>入室時刻</th>
+                                <th>退出時刻</th>
+                                <th>睡眠時間</th>
+                                <th>体調</th>
+                                <th>平均睡眠</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user_item in page %}
+                                <tr>
+                                    <td>
+                                        <a href="{% url 'selfCare:staff_detail' user_id=user_item.user.id selected_date_str=user_item.view_date|date:'Y-m-d' %}"
+                                           class="{% if user_item.medication_missing %}alert-text{% endif %}"
+                                        >
+                                            {{ user_item.display_name }}
+                                        </a>
+                                    </td>
+                                    <td class="data-cell at-home-cell">
+                                        {% if user_item.input_data.at_home %}
+                                            <input type="checkbox" checked>
+                                        {% else %}
+                                            <input type="checkbox">
+                                        {% endif %}
+                                    </td>
+                                    <td class="data-cell">{{ user_item.entry_time_display }}</td>
+                                    <td class="data-cell">{{ user_item.leaving_time_display }}</td>
+                                    <td class="data-cell">
+                                        {% if user_item.home_screen_id and user_item.sleep_time != "未入力" %}
+                                            <a href="{% url 'selfCare:chart_detail' home_screen_id=user_item.home_screen_id chart_type='sleep' %}">
+                                                {{ user_item.sleep_time }}
+                                            </a>
+                                        {% else %}
+                                            {{ user_item.sleep_time }}
+                                        {% endif %}
+                                    </td>
+
+
+                                    <td class="data-cell">
+                                        {% if user_item.home_screen_id and user_item.condition != "未入力" %}
+                                            <a href="{% url 'selfCare:chart_detail' home_screen_id=user_item.home_screen_id chart_type='condition' %}">
+                                                {{ user_item.condition }}
+                                            </a>
+                                        {% else %}
+                                            {{ user_item.condition }}
+                                        {% endif %}
+                                    </td>
+                                    <td class="data-cell">
+                                        {# user_item.average_sleep_time に値があれば（＝月の最終日で平均が計算されていれば）表示 #}
+                                        {% if user_item.average_sleep_time %}
+                                            {% if user_item.home_screen_id %}
+                                                <a href="{% url 'selfCare:chart_detail' home_screen_id=user_item.home_screen_id chart_type='monthly_average_sleep' %}">
+                                                    {{ user_item.average_sleep_time }}
+                                                </a>
+                                            {% else %}
+                                                {{ user_item.average_sleep_time }}
+                                            {% endif %}
+                                        {% else %}
+                                            {# 値がない場合（月の最終日ではない、またはデータがない場合）は空欄 '-' を表示 #}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+            <div class="pagination-container button-spacing-container">
+                <a href="{% url 'selfCare:saturday_choice' %}"><button>スタッフメニューへ</button></a>
+                <a href="{% url 'selfCare:calendar_list' %}"><button>カレンダー画面へ</button></a>
+            </div>
+             <form method="post" action="{% url 'selfCare:logout' %}" >
+                {% csrf_token %}
+                <button type="submit" class="button button-secondary">ログアウト</button>
+            </form>
+
+
+        {% elif user_role == 3 %}
+        <h1>ユーザーリスト</h1>
+        <h2>利用者・スタッフ一覧</h2>
+        {% for page in user_pages %}
+        <div class="table-container">
+            <table class="user-table">
+                <thead>
+                    <tr>
+                        <th>ネーム</th>
+                        <th>権限</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user_item in page %}
+                    <tr>
+                        <td>
+                            <!-- actionの値に応じて直接認証画面へジャンプさせる -->
+                            {% if user_item.action == 'edit' %}
+                                <a href="{% url 'selfCare:admin_auth_action' user_id=user_item.user.id action='edit' %}">
+                                    {{ user_item.display_name }}
+                                </a>
+                            {% elif user_item.action == 'delete' %}
+                                <a href="{% url 'selfCare:admin_auth_action' user_id=user_item.user.id action='delete' %}">
+                                    {{ user_item.display_name }}
+                                </a>
+                            {% else %}
+                                <!-- 通常時の場合（必要に応じて） -->
+                                <a href="{% url 'selfCare:admin_detail' user_id=user_item.user.id %}">
+                                    {{ user_item.display_name }}
+                                </a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user_item.user.user_role == 1 %}
+                                利用者
+                            {% elif user_item.user.user_role == 2 %}
+                                スタッフ
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endfor %}
+        <a href="{% url 'selfCare:admin_screen' %}" class="nav-link">管理者画面に戻る</a>
+        <form method="post" action="{% url 'selfCare:logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary">ログアウト</button>
+        </form>
+        {% endif %}
+
+        {# 現在のURLを取得し、pageパラメータとdateパラメータを適切に処理 #}
+        <div class="pagination-container">
+            {% if page_num > 1 %}
+                {# 前のページへのリンク #}
+                {% with prev_page=page_num|add:'-1' %}
+                    <a href="?page={{ prev_page }}{% if date_query %}&date={{ date_query }}{% endif %}" class="pagination-link">前へ</a>
+                {% endwith %}
+            {% endif %}
+
+            {# ページ番号のループ #}
+            {% for i in total_pages|make_list %}
+                {% with current_loop_page=forloop.counter %}
+                    {% comment %}
+                    現在のページから前後2ページのみを表示する簡易的なロジック
+                    {% endcomment %}
+                    {% if current_loop_page == page_num or current_loop_page|add:'-2' <= page_num and current_loop_page|add:'2' >= page_num %}
+                        {% if current_loop_page == page_num %}
+                            <strong class="pagination-current">{{ current_loop_page }}</strong>
+                        {% else %}
+                            <a href="?page={{ current_loop_page }}{% if date_query %}&date={{ date_query }}{% endif %}" class="pagination-link">{{ current_loop_page }}</a>
+                        {% endif %}
+                    {% elif forloop.first or forloop.last %}
+                        {% comment %}最初と最後のページは常に表示{% endcomment %}
+                        {% if forloop.first and page_num > 3 %}
+                            <a href="?page=1{% if date_query %}&date={{ date_query }}{% endif %}" class="pagination-link">1</a>
+                            <span class="pagination-ellipsis">...</span>
+                        {% elif forloop.last and total_pages|add:'-2' > page_num %}
+                            <span class="pagination-ellipsis">...</span>
+                            <a href="?page={{ total_pages }}{% if date_query %}&date={{ date_query }}{% endif %}" class="pagination-link">{{ total_pages }}</a>
+                        {% endif %}
+                    {% endif %}
+                {% endwith %}
+            {% empty %}
+                {# ユーザーが一人もいない場合の表示は特になし。ただし総ページ数が0の場合のみ。#}
+            {% endfor %}
+
+
+            {% if page_num < total_pages %}
+                {# 次のページへのリンク #}
+                {% with next_page=page_num|add:'1' %}
+                    <a href="?page={{ next_page }}{% if date_query %}&date={{ date_query }}{% endif %}" class="pagination-link">次へ</a>
+                {% endwith %}
+            {% endif %}
+        </div>
+
+    </div>
+</body>
+</html>

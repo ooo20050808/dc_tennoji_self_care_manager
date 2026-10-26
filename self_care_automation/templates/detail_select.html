@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>詳細選択</title>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <h1>アクション選択画面</h1>
+
+        <div class="selection-area">
+            <a href="{% url 'selfCare:calendar_list' %}" class="nav-link">
+                カレンダー画面へ
+            </a>
+
+            <a href="{% url 'selfCare:comment_list' home_screen_id=home_screen.id %}" class="nav-link">
+                過去30日間のコメントを見る
+            </a>
+        </div>
+
+         <div class="logout-container">
+         <form action="{% url 'selfCare:logout' %}" method="post" >
+            {% csrf_token %}
+            <button type="submit" class="button button-secondary">ログアウト</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>スタッフメニュー - 土曜開所日管理</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        
+        <h1 class="main-title">スタッフメニュー</h1>
+
+        <div class="choice-grid">
+            <!-- カレンダー画面へのリンクを他のメニュー項目と統一した構造に変更 -->
+            <a href="{% url 'selfCare:calendar_list' %}" class="choice-card register-link">
+                <h2 class="card-title">カレンダー画面へ</h2>
+            </a>
+
+            <a href="{% url 'selfCare:saturday_register' %}" class="choice-card register-link">
+                <h2 class="card-title">土曜開所日の登録</h2>
+            </a>
+
+            <a href="{% url 'selfCare:saturday_list_delete' %}" class="back-link">
+                <h2 class="card-title">誤った登録を削除する</h2>
+            </a>
+        </div>
+
+        <form action="{% url 'selfCare:logout' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="button button-secondary">ログアウト</button>
+        </form>
+    </div>
+</body>
+</html>
