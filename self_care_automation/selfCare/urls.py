@@ -42,17 +42,17 @@ urlpatterns = [
     # スタッフ用詳細ページ
     path("staff/<int:user_id>/<str:selected_date_str>/", views.StaffDetailView.as_view(), name="staff_detail"),
     # 管理者用画面ページ
-    path("admin/<int:user_id>/", views.AdminDetailView.as_view(), name="admin_detail"),
+    path("manager/<int:user_id>/", views.AdminDetailView.as_view(), name="admin_detail"),
     #アクションありのパスに一意の名前 'admin_screen_action' を指定
-    path("admin_screen/<int:user_id>/<str:action>/", views.AdminScreenView.as_view(), name="admin_screen_action"),
+    path("manager_screen/<int:user_id>/<str:action>/", views.AdminScreenView.as_view(), name="admin_screen_action"),
     # アクションなしのパスに 'admin_screen' を残す (user_list.htmlで使用)
-    path("admin_screen/", views.AdminScreenView.as_view(), name="admin_screen"),
+    path("manager_screen/", views.AdminScreenView.as_view(), name="admin_screen"),
     # アクションありの管理者認証パス (編集/削除時の管理者の再認証)
-    path("admin_auth/<int:user_id>/<str:action>/", views.AdminScreenView.as_view(), name="admin_auth_action"),
+    path("manager_auth/<int:user_id>/<str:action>/", views.AdminScreenView.as_view(), name="admin_auth_action"),
     # user_id を持たないパターン (新規作成用)
-    path("admin_auth/", views.AdminScreenView.as_view(), name="admin_auth"),
+    path("manager_auth/", views.AdminScreenView.as_view(), name="admin_auth"),
     # ユーザー認証ページ（編集用）
-    path("admin_screen/<int:user_id>/user_auth/edit/", views.UserAuthView.as_view(), {'action': 'edit'}, name="user_edit_auth"),
+    path("manager_screen/<int:user_id>/user_auth/edit/", views.UserAuthView.as_view(), {'action': 'edit'}, name="user_edit_auth"),
     # ユーザー編集画面ページ
     path('edit/<int:user_id>/', EditScreenView.as_view(), name='edit_screen'),
     # ユーザー編集確認ぺージ
