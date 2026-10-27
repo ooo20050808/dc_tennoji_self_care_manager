@@ -43,19 +43,21 @@ def user_login(request):
                 #ユーザー権限に応じてリダイレクト先を変更
                 #利用者を１スタッフを２管理者を３とする
                 if user.user_role == 1:
-                    # 利用者の場合、ログイン後、今日の日付のHomeScreenデータを取得（または作成）し、
-                    # 詳細選択画面（コメント一覧/入力画面）に遷移させる
-                    from datetime import date  # date を利用するために再確認
+                    from datetime import date
                     today = date.today()
-                    try:
-                        # ログインユーザーと今日の日付に対応する HomeScreen データを探す
-                        home_screen_data = HomeScreen.objects.get(user=user, date=today)
-                    except HomeScreen.DoesNotExist:
-                        # データが存在しない場合は新規作成
+
+                    # 1. まず今日の日付のデータがあるか確認
+                    home_screen_data = HomeScreen.objects.filter(user=user, date=today).first()
+
+                    # 2. 今日のがなければ、ユーザーが持っている「一番新しい日付」のデータがあればそれを取得する（昨日入力したものなど）
+                    if not home_screen_data:
+                        home_screen_data = HomeScreen.objects.filter(user=user).order_by('-date').first()
+
+                    # 3. それでもなければ今日の日付で新規作成
+                    if not home_screen_data:
                         home_screen_data = HomeScreen.objects.create(user=user, date=today)
 
-                    # home_screen_id を渡して詳細選択画面にリダイレクト
-                    return redirect("selfCare:detail_select", home_screen_id=home_screen_data.id)  # 画面選択ページに遷移
+                    return redirect("selfCare:detail_select", home_screen_id=home_screen_data.id)
                 elif user.user_role == 2:
                     return redirect('selfCare:saturday_choice')#スタッフの場合はカレンダー一覧に遷移するか土曜日開所日を選択する画面に遷移するか選択できる画面に遷移
                 else:
@@ -72,21 +74,20 @@ def user_login(request):
 #利用者一覧ビュー
 class UserListView(LoginRequiredMixin, View):
     def get(self, request, action=None, *args, **kwargs):
-        all_users = list(User.objects.filter(user_role=1))#利用者(user_role=1)のみを取得
-        # ユーザーの権限を取得
+        all_users = list(User.objects.filter(user_role=1))
+
         user_role = request.user.user_role
 
-        # 管理者の場合、利用者とスタッフを両方取得
         if user_role == 3:
-            all_users = list(User.objects.filter(user_role__in=[1, 2]))  # 利用者とスタッフをまとめて取得
+            all_users = list(User.objects.filter(user_role__in=[1, 2]))
         else:
-            all_users = list(User.objects.filter(user_role=1))  # 利用者のみを取得
+            all_users = list(User.objects.filter(user_role=1))
 
         # クエリパラメータなどから「完了画面から遷移してきたか」を判定フラグとして取得
         from_complete = request.GET.get('from') == 'complete'
-        if from_complete:
-            # 完了画面からの遷移の場合は、アクション（編集・削除モード）を強制解除・クリアする
-            action = None
+
+        # 完了画面からの遷移時、またはactionが引き継がれていない場合はセッションのアクション情報を強制クリア
+        if from_complete or not action:
             if 'target_action' in request.session:
                 del request.session['target_action']
             if 'target_user_id' in request.session:
@@ -855,6 +856,7 @@ class EditView(LoginRequiredMixin, View):
             target_user.save()
 
             # セッションから編集データおよびターゲット情報を削除
+            # 編集成功時
             if "edit_data" in request.session:
                 del request.session["edit_data"]
             if "target_action" in request.session:
@@ -976,6 +978,10 @@ class CreateView(LoginRequiredMixin, View):
             #セッションから作成データを削除
             if "create_data" in request.session:
                 del request.session["create_data"]
+            if "target_action" in request.session:
+                del request.session["target_action"]
+            if "target_user_id" in request.session:
+                del request.session["target_user_id"]
             messages.success(request, "ユーザーが正常に作成されました。")
             return redirect('selfCare:user_create_complete')
         except Exception as e:
@@ -1024,7 +1030,6 @@ class DeleteView(LoginRequiredMixin, View):
             target_user = User.objects.get(id=user_id)
             target_user.delete()
 
-            # セッションからターゲット情報を削除
             if "target_action" in request.session:
                 del request.session["target_action"]
             if "target_user_id" in request.session:
@@ -1692,7 +1697,6 @@ class CompleteView(LoginRequiredMixin, View):
                 chart_target_user = request.user
                 completion_date = date.today()
 
-                # ★ Python 3.14 環境でのライブラリ起因の予期せぬ再帰エラーを防ぐため try-except で保護
                 try:
                     # 睡眠時間グラフの作成
                     sleep_chart_image = create_chart_image(
