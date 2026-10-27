@@ -6,49 +6,43 @@ from selfCare.models import User, HomeScreen, InputScreen, SaturdayOpening
 
 
 class Command(BaseCommand):
-    help = '1月から10月（または11月以降）までの勤怠・生活テストデータを自動生成します。'
+    help = '1月から10月までの勤怠・生活テストデータを自動生成します。'
 
     def handle(self, *args, **options):
         current_year = timezone.now().year
 
-        # 1. 対象期間の設定（例: 1月1日から10月31日まで。11月以降の場合は必要に応じて終了日を調整してください）
+        # 1. 対象期間の設定（1月1日 〜 10月31日）
         start_date = datetime(current_year, 1, 1).date()
-
-        # 現在の月や「11月になったら11月も」というご要望に合わせて、今日が属する月（または10月・11月）まで動的に設定
-        today = timezone.now().date()
-        target_end_month = max(10, today.month) if today.year == current_year else 10
-        if target_end_month > 12:
-            target_end_month = 12
-
-        # 各月の最終日を計算するための簡易処理（ここでは10月または11月末まで、安全に10月31日または11月30日まで）
-        # ※ 1月〜10月を確実に網羅したい場合は以下のように直接10月31日などに設定可能です
         end_date = datetime(current_year, 10, 31).date()
-        # 11月以降のデータも入れる場合は、end_dateを適宜拡張してください（例: datetime(current_year, 11, 30).date()）
 
         users = User.objects.filter(user_role=1)
         if not users.exists():
             self.stdout.write(self.style.ERROR('対象となる利用者（user_role=1）が存在しません。'))
             return
 
+        # 土曜開所日の登録者（registered_by）とするスタッフユーザーを取得
+        staff_user = User.objects.filter(user_role__in=[2, 3]).first()
+        if not staff_user:
+            staff_user = users.first()  # スタッフがいない場合のフォールバック
+
         self.stdout.write(self.style.NOTICE(f'{start_date} から {end_date} までのテストデータ生成を開始します...'))
 
-        # 2. 期間内の土曜日をランダムに「土曜開所日 (SaturdayOpening)」として登録する
+        # 2. 期間内の土曜日を45%の確率で「土曜開所日 (SaturdayOpening)」としてスタッフ名義で登録
         current_date = start_date
         saturday_created_count = 0
         while current_date <= end_date:
-            if current_date.weekday() == 5:  # 土曜日
-                # 40%の確率で土曜開所日としてランダム登録
-                if random.random() < 0.4:
+            if current_date.weekday() == 5:  # 土曜日のみ
+                if random.random() < 0.45:  # 登録率45%
                     SaturdayOpening.objects.get_or_create(
                         open_date=current_date,
-                        defaults={'registered_by': users.first()}
+                        defaults={'registered_by': staff_user}
                     )
                     saturday_created_count += 1
             current_date += timedelta(days=1)
 
         self.stdout.write(self.style.SUCCESS(f'土曜開所日を {saturday_created_count} 日分ランダム登録しました。'))
 
-        # 3. 動的生成用のバリエーション候補（毎回ランダムに選択）
+        # 3. 動的生成用のバリエーション候補
         morning_works = [
             '基礎スキル学習（Python/Django）',
             'データ入力・ファイル整理',
@@ -64,7 +58,7 @@ class Command(BaseCommand):
             '自由学習・ポートフォリオ作成'
         ]
         user_comments = [
-            '体調は概ね安定しており、集中して作業に取り組めました。',
+            '体調は概ね安定しており、集中して作業に取り組みました。',
             '少し疲れを感じましたが、最後までやり遂げました。',
             '分からない箇所をスタッフの方に質問し、無事に解決できました。',
             '自分のペースで着実にスキルアップが進んでいる実感があります。',
@@ -76,6 +70,23 @@ class Command(BaseCommand):
             '質問を積極的に行っていて良い姿勢です。',
             '着実に成果が出ています。この調子で進めましょう。',
             '確認しました。体調を崩さないよう無理せずいきましょう。'
+        ]
+
+        # 体調詳細モーダルのコメント候補
+        detail_good_choices = [
+            'ぐっすり眠れて朝から爽快です。',
+            '体調万全で、学習に集中できました。',
+            '特に問題なく、順調に過ごせました。'
+        ]
+        detail_caution_choices = [
+            '少し睡眠不足ですが、午後から持ち直しました。',
+            '肩こりがありますが、体調不良というほどではありません。',
+            '疲れ気味なので、早めに休む予定です。'
+        ]
+        detail_poor_choices = [
+            '頭痛がするため、こまめに休憩を取りながら進めました。',
+            '少し体調を崩してしまったため、無理のない範囲で取り組みました。',
+            '倦怠感があるため、スタッフに相談して作業を調整しました。'
         ]
 
         # 4. 日ごとの勤怠・生活データの生成ループ
@@ -133,14 +144,27 @@ class Command(BaseCommand):
                     med_n = random.choice([True, False])
                     med_nig = random.choice([True, False])
 
-                # 体調
+                # 体調と体調詳細モーダルの設定
                 condition = random.choices(['〇', '△', '✕'], weights=[75, 20, 5])[0]
+                cond_detail_good = ''
+                cond_detail_caution = ''
+                cond_detail_poor = ''
 
-                # 入退室時刻の割り振り（在宅か通所かでビューの仕様に合わせてフィールドを切り分け）
+                if condition == '〇':
+                    cond_detail_good = random.choice(detail_good_choices)
+                elif condition == '△':
+                    cond_detail_caution = random.choice(detail_caution_choices)
+                elif condition == '✕':
+                    cond_detail_poor = random.choice(detail_poor_choices)
+
+                # データベース保存用パラメータの組み立て
                 defaults_data = {
                     'at_home': at_home,
                     'sleep_time_hours': sleep_hours,
                     'condition': condition,
+                    'condition_detail_good': cond_detail_good,
+                    'condition_detail_caution': cond_detail_caution,
+                    'condition_detail_poor': cond_detail_poor,
                     'medication_morning': med_m,
                     'medication_noon': med_n,
                     'medication_night': med_nig,
