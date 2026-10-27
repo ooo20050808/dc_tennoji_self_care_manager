@@ -105,7 +105,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # 実際の静密ファイルがあるディレクトリ（self_care_automation/static）を指定する
-STATIC_DIR = BASE_DIR / 'self_care_automation' / 'static'
+STATIC_DIR = BASE_DIR / 'static'
 if not STATIC_DIR.exists():
     STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
