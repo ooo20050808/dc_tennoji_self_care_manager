@@ -7,7 +7,7 @@ load_dotenv()
 
 # settings.py が self_care_automation/self_care_automation/settings.py にあるため、
 # parent を 3 つ繋げて manage.py がある真のルートディレクトリを指定する
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-for-dev')
@@ -110,7 +110,7 @@ if not STATIC_DIR.exists():
     STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
 STATICFILES_DIRS = [
-    STATIC_DIR,
+    BASE_DIR / 'static',
 ]
 
 # WhiteNoise が安全に静的ファイルを認識できるように標準のCompressedStaticFilesStorageを指定

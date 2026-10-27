@@ -4,7 +4,7 @@ services:
     env: python
     region: singapore
     plan: free
-    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput --clear && python manage.py migrat"
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput --clear && python manage.py migrate"
     startCommand: "PYTHONPATH=. gunicorn self_care_automation.wsgi:application --bind 0.0.0.0:$PORT"
     envVars:
       - key: PYTHON_VERSION
@@ -23,6 +23,13 @@ services:
         sync: false
       - key: CLOUDINARY_API_SECRET
         sync: false
+      # ↓ 以下を追加します
+      - key: DJANGO_SUPERUSER_USERNAME
+        value: admin
+      - key: DJANGO_SUPERUSER_EMAIL
+        value: admin@example.com
+      - key: DJANGO_SUPERUSER_PASSWORD
+        value: 2wsxcde3
 
 databases:
   - name: self-care-db
