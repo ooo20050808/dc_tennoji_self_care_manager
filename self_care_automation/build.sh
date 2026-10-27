@@ -46,4 +46,8 @@ if username and password:
 else:
     print('WARNING: Superuser environment variables are not fully set.')
 "
+# 6. テストデータの自動生成コマンド実行
+echo "=== テストデータの自動生成 ==="
+python manage.py generate_test_data
+
 cd ..
