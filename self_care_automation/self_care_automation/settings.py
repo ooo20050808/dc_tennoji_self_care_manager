@@ -7,7 +7,7 @@ load_dotenv()
 
 # settings.py が self_care_automation/self_care_automation/settings.py にあるため、
 # parent を 3 つ繋げて manage.py がある真のルートディレクトリを指定する
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-default-key-for-dev')
@@ -104,8 +104,8 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# 実際のディレクトリ構造（self_care_automation/static）に合わせる
-STATIC_DIR = BASE_DIR /  'static'
+# 実際の静密ファイルがあるディレクトリ（self_care_automation/static）を指定する
+STATIC_DIR = BASE_DIR / 'self_care_automation' / 'static'
 if not STATIC_DIR.exists():
     STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
