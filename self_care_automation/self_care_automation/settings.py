@@ -102,15 +102,15 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / '../staticfiles'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # 実際のディレクトリ構造（self_care_automation/static）に合わせる
-STATIC_DIR = BASE_DIR / 'self_care_automation' / 'static'
+STATIC_DIR = BASE_DIR /  'static'
 if not STATIC_DIR.exists():
     STATIC_DIR.mkdir(parents=True, exist_ok=True)
 
 STATICFILES_DIRS = [
-    BASE_DIR / 'static',
+    STATIC_DIR,
 ]
 
 # WhiteNoise が安全に静的ファイルを認識できるように標準のCompressedStaticFilesStorageを指定
