@@ -20,8 +20,7 @@ fi
 
 # 3. 静的ファイルの収集 (collectstatic を実行して WhiteNoise 用のファイルを生成)
 echo "=== 静的ファイルの収集 ==="
-rm -rf staticfiles
-python manage.py collectstatic --noinput
+python manage.py collectstatic --noinput --clear
 
 # 4. データベースのマイグレーション
 python manage.py migrate
