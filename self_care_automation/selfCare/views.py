@@ -547,29 +547,26 @@ class AdminDetailView(LoginRequiredMixin, View):
 class AdminScreenView(LoginRequiredMixin, View):
     # URLパターンに合わせて action を受け取るように修正
     def get(self, request, user_id=None, action=None, *args, **kwargs):
-        #admin_auth_action URLでのアクセスの場合の処理
-        # user_id と action が両方あり、リダイレクト先から戻ってきたと判断できる場合
+        # 1. user_id と action が両方ある場合（編集・削除のアクション付き管理者認証）
         if user_id is not None and action in ['edit', 'delete']:
             try:
                 target_user = User.objects.get(id=user_id)
                 request.session['target_user_id'] = user_id
                 request.session['target_action'] = action
 
-                # 認証フォームをレンダリングしてループを停止する
                 form = AuthForm()
                 context = {
                     'target_user': target_user,
                     'action': action,
                     'form': form,
-                    'title': '管理者認証'  # 適切なタイトルを設定
+                    'title': '管理者認証'
                 }
                 return render(request, 'admin_auth.html', context)
             except User.DoesNotExist:
                 messages.error(request, '指定されたユーザーが見つかりませんでした。')
                 return redirect('selfCare:user_list')
 
-        #admin_screen_action URLでのアクセスの場合の処理
-        # user_id があり、action が 'edit' または 'delete' の場合
+        # 2. user_id のみがあり action がない場合（アクション選択画面またはリダイレクト）
         if user_id is not None:
             try:
                 target_user = User.objects.get(id=user_id)
@@ -577,17 +574,12 @@ class AdminScreenView(LoginRequiredMixin, View):
 
                 if action in ['edit', 'delete']:
                     request.session['target_action'] = action
-                    # アクションが指定されたら、直ちにアクション付き認証画面にリダイレクト
                     return redirect("selfCare:admin_auth_action", user_id=user_id, action=action)
-
-                # action が指定されていない場合
                 else:
-                    # action 選択画面 (admin_screen.html) をレンダリング
                     context = {
                         'target_user': target_user,
                         'action': action,
                     }
-                    # セッションに以前のアクションが残っている場合は削除
                     if 'target_action' in request.session:
                         del request.session['target_action']
 
@@ -596,10 +588,10 @@ class AdminScreenView(LoginRequiredMixin, View):
                 messages.error(request, '指定されたユーザーが見つかりませんでした。')
                 return redirect('selfCare:user_list')
 
-        #admin_auth URLでのアクセスの場合の処理 (user_idがNone)
-        # 新規作成のための管理者認証の場合
-        if user_id is None and request.path == '/admin_auth/':
-            # セッションから target_user_id と target_action を削除 (新規作成のため)
+        # 3. 新規作成用の管理者認証アクセスの場合（user_id が None で manager_auth 経由のアクセス）
+        # パス名で直接判定せず、URLの呼び出し元パターン（'manager_auth' へのアクセス）で判定
+        if user_id is None and 'manager_auth' in request.path:
+            # セッションから古いターゲット情報をクリーンアップ
             if 'target_user_id' in request.session:
                 del request.session['target_user_id']
             if 'target_action' in request.session:
@@ -608,21 +600,19 @@ class AdminScreenView(LoginRequiredMixin, View):
             form = AuthForm()
             return render(request, 'admin_auth.html', {'form': form, 'title': '管理者認証'})
 
-        # admin_screen URLでのアクセスでuser_idがない場合（管理者ログイン直後）
+        # 4. admin_screen (user_id なし) への通常アクセス時（管理者ログイン直後など）
         if user_id is None:
-            # セッションに残っている可能性のある target_user_id と target_action を削除
             if 'target_user_id' in request.session:
                 del request.session['target_user_id']
             if 'target_action' in request.session:
                 del request.session['target_action']
 
-            # 管理者メイン画面をレンダリング
             context = {
                 'user': request.user,
                 'title': '管理者メニュー'
             }
             return render(request, 'admin_screen.html', context)
-        # 上記のどのパターンにも当てはまらない場合（安全のため）
+
         return redirect('selfCare:admin_screen')
 
     def post(self, request, user_id=None, action=None, *args, **kwargs):
