@@ -102,7 +102,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
-#STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATIC_ROOT = BASE_DIR / 'static'
 
 # 実際のディレクトリ構造（self_care_automation/static）に合わせる
 STATIC_DIR = BASE_DIR / 'self_care_automation' / 'static'
