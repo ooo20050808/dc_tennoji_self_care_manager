@@ -17,13 +17,13 @@ fi
 
 # 3. 静的ファイルの収集 (ルートから直接実行)
 echo "=== 静的ファイルの収集 ==="
-python self_care_automation/manage.py collectstatic --noinput --clear
+python manage.py collectstatic --noinput --clear
 
 # 4. データベースのマイグレーション
-python self_care_automation/manage.py migrate
+python manage.py migrate
 
 # 5. スーパーユーザーの自動作成
-python self_care_automation/manage.py shell -c "
+python manage.py shell -c "
 from django.contrib.auth import get_user_model
 import os
 
