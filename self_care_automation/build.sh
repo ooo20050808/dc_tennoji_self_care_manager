@@ -7,9 +7,6 @@ pip install -r requirements.txt
 echo "=== 現在のディレクトリ構造 ==="
 ls -la
 
-echo "=== templates フォルダの存在確認 ==="
-ls -R templates || echo "templates フォルダが見つかりません"
-
 # 2. テンプレートの同期処理
 echo "=== テンプレートの同期処理 ==="
 mkdir -p self_care_automation/templates
@@ -18,15 +15,15 @@ if [ -d "templates" ]; then
     echo "templates を self_care_automation/templates にコピーしました。"
 fi
 
-# 3. 静的ファイルの収集 (collectstatic を実行して WhiteNoise 用のファイルを生成)
+# 3. 静的ファイルの収集 (ルートから直接実行)
 echo "=== 静的ファイルの収集 ==="
-python manage.py collectstatic --noinput --clear
+python self_care_automation/manage.py collectstatic --noinput --clear
 
 # 4. データベースのマイグレーション
-python manage.py migrate
+python self_care_automation/manage.py migrate
 
 # 5. スーパーユーザーの自動作成
-python manage.py shell -c "
+python self_care_automation/manage.py shell -c "
 from django.contrib.auth import get_user_model
 import os
 
