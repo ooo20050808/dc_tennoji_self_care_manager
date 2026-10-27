@@ -17,7 +17,6 @@ fi
 
 # 3. 静的ファイルの収集 (self_care_automation ディレクトリに移動して実行)
 echo "=== 静的ファイルの収集 ==="
-cd self_care_automation
 python manage.py collectstatic --noinput --clear
 
 # 4. データベースのマイグレーション
