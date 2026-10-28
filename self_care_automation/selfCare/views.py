@@ -387,7 +387,7 @@ class CalendarListView(LoginRequiredMixin, ListView):
                             'comment': comment_complete,
                             'time': time_complete
                         }
-                        is_input_complete = all(completion_status.values())
+                        is_input_complete = False
 
                     except InputScreen.DoesNotExist:
                         is_input_complete = False

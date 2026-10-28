@@ -6,14 +6,14 @@ from selfCare.models import User, HomeScreen, InputScreen, SaturdayOpening
 
 
 class Command(BaseCommand):
-    help = '1月から10月までの勤怠・生活テストデータを自動生成します。'
+    help = '1月1日から10月1日までの勤怠・生活テストデータを自動生成します。'
 
     def handle(self, *args, **options):
         current_year = timezone.now().year
 
-        # 1. 対象期間の設定（1月1日 〜 10月31日）
+        # 1. 対象期間の設定（1月1日 〜 10月1日まで）
         start_date = datetime(current_year, 1, 1).date()
-        end_date = datetime(current_year, 10, 31).date()
+        end_date = datetime(current_year, 10, 1).date()
 
         users = User.objects.filter(user_role=1)
         if not users.exists():
@@ -32,7 +32,6 @@ class Command(BaseCommand):
         current_date = start_date
         saturday_created_count = 0
         while current_date <= end_date:
-            # 厳密に土曜日のみ判定
             if current_date.weekday() == 5:
                 if random.random() < 0.45:  # 登録率45%
                     SaturdayOpening.objects.get_or_create(
@@ -44,7 +43,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f'土曜開所日を {saturday_created_count} 日分ランダム登録しました。'))
 
-        # 3. 動的生成用のバリエーション候補
+        # 3. 動的生成用のバリエーション候補（すべての項目をもれなく埋めるため）
         morning_works = [
             '基礎スキル学習（Python/Django）',
             'データ入力・ファイル整理',
@@ -56,7 +55,7 @@ class Command(BaseCommand):
             'グループワーク・掲示板機能開発',
             'データベース設計・SQL演習',
             '振り返りシート作成・コードレビュー',
-            'API連携テスト・エラーハンドリング',
+            'API連携テスト・エラーhandling',
             '自由学習・ポートフォリオ作成'
         ]
         user_comments = [
@@ -75,21 +74,9 @@ class Command(BaseCommand):
         ]
 
         # 体調詳細モーダルのコメント候補
-        detail_good_choices = [
-            'ぐっすり眠れて朝から爽快です。',
-            '体調万全で、学習に集中できました。',
-            '特に問題なく、順調に過ごせました。'
-        ]
-        detail_caution_choices = [
-            '少し睡眠不足ですが、午後から持ち直しました。',
-            '肩こりがありますが、体調不良というほどではありません。',
-            '疲れ気味なので、早めに休む予定です。'
-        ]
-        detail_poor_choices = [
-            '頭痛がするため、こまめに休憩を取りながら進めました。',
-            '少し体調を崩してしまったため、無理のない範囲で取り組みました。',
-            '倦怠感があるため、スタッフに相談して作業を調整しました。'
-        ]
+        detail_good_choices = ['ぐっすり眠れて朝から爽快です。', '体調万全で、学習に集中できました。', '特に問題なく、順調に過ごせました。']
+        detail_caution_choices = ['少し睡眠不足ですが、午後から持ち直しました。', '肩こりがありますが、体調不良というほどではありません。', '疲れ気味なので、早めに休む予定です。']
+        detail_poor_choices = ['頭痛がするため、こまめに休憩を取りながら進めました。', '少し体調を崩してしまったため、無理のない範囲で取り組みました。', '倦怠感があるため、スタッフに相談して作業を調整しました。']
 
         # 4. 日ごとの勤怠・生活データの生成ループ
         current_date = start_date
@@ -103,7 +90,7 @@ class Command(BaseCommand):
                 current_date += timedelta(days=1)
                 continue
 
-            # 土曜日の場合、SaturdayOpeningに登録されている開所日かチェック
+            # 土曜日の場合、SaturdayOpeningに登録されている開所日かチェック（登録されていない土曜日は完全にスキップ）
             if weekday == 5:
                 is_open_saturday = SaturdayOpening.objects.filter(open_date=current_date).exists()
                 if not is_open_saturday:
@@ -116,10 +103,9 @@ class Command(BaseCommand):
                     date=current_date
                 )
 
-                # 在宅チェックをランダムに設定（35%の確率で在宅＝True）
-                at_home = random.random() < 0.35
+                at_home = random.choice([True, False])
 
-                # 入室・退出時刻: 10:00〜16:00 の15分刻み
+                # 入室・退出時刻
                 time_slots = []
                 for h in range(10, 16):
                     for m in range(0, 60, 15):
@@ -132,22 +118,14 @@ class Command(BaseCommand):
                     valid_leaving_slots = [time(16, 0)]
                 leaving_t = random.choice(valid_leaving_slots)
 
-                # 睡眠時間: 0〜24時間のランダム（0.5時間刻み）
-                sleep_hours = round(random.choice([i * 0.5 for i in range(0, 49)]), 1)
+                # 睡眠時間
+                sleep_hours = round(random.choice([i * 0.5 for i in range(10, 19)]), 1) # 5.0〜9.0時間など確実に
 
-                # 服薬チェック: 「全てTrue」「いずれかFalse」「全てFalse」のいずれか
-                med_pattern = random.choice(['all_true', 'some_false', 'all_false'])
-                if med_pattern == 'all_true':
-                    med_m, med_n, med_nig = True, True, True
-                elif med_pattern == 'all_false':
-                    med_m, med_n, med_nig = False, False, False
-                else:
-                    med_m = random.choice([True, False])
-                    med_n = random.choice([True, False])
-                    med_nig = random.choice([True, False])
+                # 服薬チェック（全てTrueにする場合やランダム）
+                med_m, med_n, med_nig = True, True, True
 
-                # 体調と体調詳細モーダルの設定
-                condition = random.choices(['〇', '△', '✕'], weights=[75, 20, 5])[0]
+                # 体調と体調詳細モーダル（すべての項目を確実に埋める）
+                condition = random.choice(['〇', '△', '✕'])
                 cond_detail_good = ''
                 cond_detail_caution = ''
                 cond_detail_poor = ''
@@ -159,7 +137,7 @@ class Command(BaseCommand):
                 elif condition == '✕':
                     cond_detail_poor = random.choice(detail_poor_choices)
 
-                # データベース保存用パラメータの組み立て
+                # データベース保存用パラメータ（全項目をもれなく入力）
                 defaults_data = {
                     'at_home': at_home,
                     'sleep_time_hours': sleep_hours,
