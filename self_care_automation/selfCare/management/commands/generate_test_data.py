@@ -73,14 +73,15 @@ class Command(BaseCommand):
             '確認しました。体調を崩さないよう無理せずいきましょう。'
         ]
 
-        # 体調詳細モーダルのコメント候補（すべての詳細項目にそれぞれ値を設定できるように用意）
+        # 体調詳細モーダルのコメント候補（すべての詳細項目にそれぞれ値を設定）
         detail_good_choices = ['ぐっすり眠れて朝から爽快です。', '体調万全で、学習に集中できました。', '特に問題なく、順調に過ごせました。']
         detail_caution_choices = ['少し睡眠不足ですが、午後から持ち直しました。', '肩こりがありますが、体調不良というほどではありません。', '疲れ気味なので、早めに休む予定です。']
         detail_poor_choices = ['頭痛がするため、こまめに休憩を取りながら進めました。', '少し体調を崩してしまったため、無理のない範囲で取り組みました。', '倦怠感があるため、スタッフに相談して作業を調整しました。']
 
-        # 4. 日ごとの勤怠・生活データの生成ループ
+        # 4. 日ごとの勤怠・生活データの生成ループ（10月1日を含むend_dateまで確実に処理）
         current_date = start_date
         total_created = 0
+        total_updated = 0
 
         while current_date <= end_date:
             weekday = current_date.weekday()
@@ -158,15 +159,18 @@ class Command(BaseCommand):
                     defaults_data['staff_entry_time'] = None
                     defaults_data['staff_leaving_time'] = None
 
-                input_screen, created = InputScreen.objects.get_or_create(
+                # update_or_create を使用して、既存データがある場合でも必ず最新データで上書き保存する
+                input_screen, created = InputScreen.objects.update_or_create(
                     user=user,
                     date=home_screen,
                     defaults=defaults_data
                 )
                 if created:
                     total_created += 1
+                else:
+                    total_updated += 1
 
             current_date += timedelta(days=1)
 
         self.stdout.write(
-            self.style.SUCCESS(f'処理が完了しました。合計 {total_created} 件のテストデータを生成しました。'))
+            self.style.SUCCESS(f'処理が完了しました。新規作成: {total_created} 件, 更新: {total_updated} 件'))
