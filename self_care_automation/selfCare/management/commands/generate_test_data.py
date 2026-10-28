@@ -20,18 +20,20 @@ class Command(BaseCommand):
             self.stdout.write(self.style.ERROR('対象となる利用者（user_role=1）が存在しません。'))
             return
 
-        # 土曜開所日の登録者（registered_by）とするスタッフユーザーを取得
-        staff_user = User.objects.filter(user_role__in=[2, 3]).first()
+        # 土曜開所日の登録者（registered_by）とするスタッフユーザー（user_role=2）を取得
+        staff_user = User.objects.filter(user_role=2).first()
         if not staff_user:
-            staff_user = users.first()  # スタッフがいない場合のフォールバック
+            self.stdout.write(self.style.WARNING('user_role=2のスタッフが存在しないため、その他のスタッフ/管理者を検索します。'))
+            staff_user = User.objects.filter(user_role=3).first() or users.first()
 
         self.stdout.write(self.style.NOTICE(f'{start_date} から {end_date} までのテストデータ生成を開始します...'))
 
-        # 2. 期間内の土曜日を45%の確率で「土曜開所日 (SaturdayOpening)」としてスタッフ名義で登録
+        # 2. 期間内の「土曜日（weekday()==5）のみ」を45%の確率で「土曜開所日 (SaturdayOpening)」としてスタッフ名義で登録
         current_date = start_date
         saturday_created_count = 0
         while current_date <= end_date:
-            if current_date.weekday() == 5:  # 土曜日のみ
+            # 厳密に土曜日のみ判定
+            if current_date.weekday() == 5:
                 if random.random() < 0.45:  # 登録率45%
                     SaturdayOpening.objects.get_or_create(
                         open_date=current_date,
