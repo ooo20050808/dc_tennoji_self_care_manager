@@ -43,7 +43,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f'土曜開所日を {saturday_created_count} 日分ランダム登録しました。'))
 
-        # 3. 動的生成用のバリエーション候補（すべての項目をもれなく埋めるため）
+        # 3. 動的生成用のバリエーション候補
         morning_works = [
             '基礎スキル学習（Python/Django）',
             'データ入力・ファイル整理',
@@ -55,7 +55,7 @@ class Command(BaseCommand):
             'グループワーク・掲示板機能開発',
             'データベース設計・SQL演習',
             '振り返りシート作成・コードレビュー',
-            'API連携テスト・エラーhandling',
+            'API連携テスト・エラーハンドリング',
             '自由学習・ポートフォリオ作成'
         ]
         user_comments = [
@@ -73,7 +73,7 @@ class Command(BaseCommand):
             '確認しました。体調を崩さないよう無理せずいきましょう。'
         ]
 
-        # 体調詳細モーダルのコメント候補
+        # 体調詳細モーダルのコメント候補（すべての詳細項目にそれぞれ値を設定できるように用意）
         detail_good_choices = ['ぐっすり眠れて朝から爽快です。', '体調万全で、学習に集中できました。', '特に問題なく、順調に過ごせました。']
         detail_caution_choices = ['少し睡眠不足ですが、午後から持ち直しました。', '肩こりがありますが、体調不良というほどではありません。', '疲れ気味なので、早めに休む予定です。']
         detail_poor_choices = ['頭痛がするため、こまめに休憩を取りながら進めました。', '少し体調を崩してしまったため、無理のない範囲で取り組みました。', '倦怠感があるため、スタッフに相談して作業を調整しました。']
@@ -119,25 +119,18 @@ class Command(BaseCommand):
                 leaving_t = random.choice(valid_leaving_slots)
 
                 # 睡眠時間
-                sleep_hours = round(random.choice([i * 0.5 for i in range(10, 19)]), 1) # 5.0〜9.0時間など確実に
+                sleep_hours = round(random.choice([i * 0.5 for i in range(10, 19)]), 1)
 
-                # 服薬チェック（全てTrueにする場合やランダム）
+                # 服薬チェック
                 med_m, med_n, med_nig = True, True, True
 
-                # 体調と体調詳細モーダル（すべての項目を確実に埋める）
+                # 体調と体調詳細モーダル（すべての詳細項目を空にせず確実に入力）
                 condition = random.choice(['〇', '△', '✕'])
-                cond_detail_good = ''
-                cond_detail_caution = ''
-                cond_detail_poor = ''
+                cond_detail_good = random.choice(detail_good_choices)
+                cond_detail_caution = random.choice(detail_caution_choices)
+                cond_detail_poor = random.choice(detail_poor_choices)
 
-                if condition == '〇':
-                    cond_detail_good = random.choice(detail_good_choices)
-                elif condition == '△':
-                    cond_detail_caution = random.choice(detail_caution_choices)
-                elif condition == '✕':
-                    cond_detail_poor = random.choice(detail_poor_choices)
-
-                # データベース保存用パラメータ（全項目をもれなく入力）
+                # データベース保存用パラメータ
                 defaults_data = {
                     'at_home': at_home,
                     'sleep_time_hours': sleep_hours,
