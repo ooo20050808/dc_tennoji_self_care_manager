@@ -6,14 +6,14 @@ from selfCare.models import User, HomeScreen, InputScreen, SaturdayOpening
 
 
 class Command(BaseCommand):
-    help = '1月1日から10月1日までの勤怠・生活テストデータを自動生成します。'
+    help = '1月1日から10月31日までの勤怠・生活テストデータを自動生成します。'
 
     def handle(self, *args, **options):
         current_year = timezone.now().year
 
-        # 1. 対象期間の設定（1月1日 〜 10月1日まで）
+        # 1. 対象期間の設定（1月1日 〜 10月31日まで）
         start_date = datetime(current_year, 1, 1).date()
-        end_date = datetime(current_year, 10, 1).date()
+        end_date = datetime(current_year, 10, 31).date()
 
         users = User.objects.filter(user_role=1)
         if not users.exists():
@@ -78,7 +78,7 @@ class Command(BaseCommand):
         detail_caution_choices = ['少し睡眠不足ですが、午後から持ち直しました。', '肩こりがありますが、体調不良というほどではありません。', '疲れ気味なので、早めに休む予定です。']
         detail_poor_choices = ['頭痛がするため、こまめに休憩を取りながら進めました。', '少し体調を崩してしまったため、無理のない範囲で取り組みました。', '倦怠感があるため、スタッフに相談して作業を調整しました。']
 
-        # 4. 日ごとの勤怠・生活データの生成ループ（10月1日を含めて確実に処理）
+        # 4. 日ごとの勤怠・生活データの生成ループ（10月31日まで拡張）
         current_date = start_date
         total_created = 0
         total_updated = 0
@@ -123,21 +123,17 @@ class Command(BaseCommand):
                 sleep_hours = round(random.choice([i * 0.5 for i in range(10, 19)]), 1)
 
                 # 服薬チェックの3パターンをランダム選択
-                # パターン1: 全て記載 (True, True, True)
-                # パターン2: どれか一つ（または複数）未記載 (False混じり)
-                # パターン3: すべて未記載 (False, False, False)
                 med_pattern = random.choice(['all_true', 'some_false', 'all_false'])
                 if med_pattern == 'all_true':
                     med_m, med_n, med_nig = True, True, True
                 elif med_pattern == 'all_false':
                     med_m, med_n, med_nig = False, False, False
                 else:
-                    # どれか一つ以上がFalseになるようにランダム選択
                     med_m = random.choice([True, False])
                     med_n = random.choice([True, False])
                     med_nig = random.choice([True, False])
                     if med_m and med_n and med_nig:
-                        med_nig = False  # すべてTrueになってしまった場合は1つFalseにする
+                        med_nig = False
 
                 # 体調と体調詳細モーダル（すべての詳細項目に必ず値が入るようにする）
                 condition = random.choice(['〇', '△', '✕'])
