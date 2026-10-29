@@ -73,12 +73,12 @@ class Command(BaseCommand):
             '確認しました。体調を崩さないよう無理せずいきましょう。'
         ]
 
-        # 体調詳細モーダルのコメント候補
+        # 体調詳細モーダルのコメント候補（すべての詳細項目にそれぞれ値を設定）
         detail_good_choices = ['ぐっすり眠れて朝から爽快です。', '体調万全で、学習に集中できました。', '特に問題なく、順調に過ごせました。']
         detail_caution_choices = ['少し睡眠不足ですが、午後から持ち直しました。', '肩こりがありますが、体調不良というほどではありません。', '疲れ気味なので、早めに休む予定です。']
         detail_poor_choices = ['頭痛がするため、こまめに休憩を取りながら進めました。', '少し体調を崩してしまったため、無理のない範囲で取り組みました。', '倦怠感があるため、スタッフに相談して作業を調整しました。']
 
-        # 4. 日ごとの勤怠・生活データの生成ループ（10月1日を含めて確実に処理するため条件を <= に設定）
+        # 4. 日ごとの勤怠・生活データの生成ループ（10月1日を含めて確実に処理）
         current_date = start_date
         total_created = 0
         total_updated = 0
@@ -122,8 +122,22 @@ class Command(BaseCommand):
                 # 睡眠時間
                 sleep_hours = round(random.choice([i * 0.5 for i in range(10, 19)]), 1)
 
-                # 服薬チェック
-                med_m, med_n, med_nig = True, True, True
+                # 服薬チェックの3パターンをランダム選択
+                # パターン1: 全て記載 (True, True, True)
+                # パターン2: どれか一つ（または複数）未記載 (False混じり)
+                # パターン3: すべて未記載 (False, False, False)
+                med_pattern = random.choice(['all_true', 'some_false', 'all_false'])
+                if med_pattern == 'all_true':
+                    med_m, med_n, med_nig = True, True, True
+                elif med_pattern == 'all_false':
+                    med_m, med_n, med_nig = False, False, False
+                else:
+                    # どれか一つ以上がFalseになるようにランダム選択
+                    med_m = random.choice([True, False])
+                    med_n = random.choice([True, False])
+                    med_nig = random.choice([True, False])
+                    if med_m and med_n and med_nig:
+                        med_nig = False  # すべてTrueになってしまった場合は1つFalseにする
 
                 # 体調と体調詳細モーダル（すべての詳細項目に必ず値が入るようにする）
                 condition = random.choice(['〇', '△', '✕'])
@@ -166,8 +180,7 @@ class Command(BaseCommand):
                     defaults=defaults_data
                 )
 
-                # ビュー側の仕様（選択した体調以外を空にする処理）を回避するため、
-                # 直接オブジェクトのフィールドを再代入して強制保存する
+                # 体調の詳細フィールドを確実に強制保存
                 input_screen.condition_detail_good = cond_detail_good
                 input_screen.condition_detail_caution = cond_detail_caution
                 input_screen.condition_detail_poor = cond_detail_poor
