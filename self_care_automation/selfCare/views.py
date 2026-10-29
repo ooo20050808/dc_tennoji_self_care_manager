@@ -287,6 +287,9 @@ class CalendarListView(LoginRequiredMixin, ListView):
         today = date.today()
         year = int(self.request.GET.get("year", today.year))
         month = int(self.request.GET.get("month", today.month))
+        #カレンダーを開いた（表示した）年月をセッションに保存
+        self.request.session['calendar_year'] = year
+        self.request.session['calendar_month'] = month
 
         # カレンダーのヘッダーに表示する「何年何月」の情報を取得
         current_month_year = date(year, month, 1)
@@ -423,6 +426,9 @@ class CalendarListView(LoginRequiredMixin, ListView):
 
 ##日付けクリック時の処理を行うビュー
 def calendar_detail_view(request, year, month, day):
+    #現在開いていたカレンダーの年月をセッションに保存する
+    request.session['calendar_year'] = year
+    request.session['calendar_month'] = month
     #クリックされた日付を取得
     selected_date= date(year, month, day)
     user = request.user
@@ -1568,6 +1574,8 @@ class InputScreenView(LoginRequiredMixin, View):
                     if session_modal_data.get('condition_detail_poor') is not None:
                         input_screen_data.condition_detail_poor = session_modal_data['condition_detail_poor']
 
+            # 【追加】選択された日付の年・月を維持したカレンダー一覧へのURLを生成
+            calendar_back_url = f"{reverse('selfCare:calendar_list')}?year={selected_date.year}&month={selected_date.month}"
             # テンプレートで form.leaving_time_staff.value を使うため不要
             context = {
                 'form': form,
@@ -1588,6 +1596,7 @@ class InputScreenView(LoginRequiredMixin, View):
                 "condition_detail_poor": input_screen_data.condition_detail_poor,
                 "morning_work_content": input_screen_data.morning_work_content,
                 "afternoon_work_content": input_screen_data.afternoon_work_content,
+                'calendar_back_url': calendar_back_url,
             }
             return render(request, 'input_screen.html', context)
 
@@ -1727,35 +1736,68 @@ class CompleteView(LoginRequiredMixin, View):
             messages.error(request, '指定されたホーム画面データが見つかりませんでした。')
             return redirect("selfCare:calendar_list")
 
-#コメント一覧ビュー
+# コメント一覧ビュー（月別選択および30日間表示対応）
 class CommentListView(LoginRequiredMixin, View):
     def get(self, request, home_screen_id, *args, **kwargs):
         try:
             home_screen = HomeScreen.objects.get(id=home_screen_id)
-            end_date = timezone.now().date()
             target_user = home_screen.user
 
-            start_date = end_date - timedelta(days=29)#今日含めて３０日間
+            # 1. URLパラメータから年(year)と月(month)を取得。指定がなければ今月に設定
+            today = timezone.now().date()
+            year = int(request.GET.get('year', today.year))
+            month = int(request.GET.get('month', today.month))
 
-            #該当ユーザーのInputScreenデータを取得（日付範囲内）
+            # 2. 基準となる日付を設定（その月の1日、またはその月のデータ範囲を決定するため）
+            try:
+                selected_start_date = date(year, month, 1)
+            except ValueError:
+                selected_start_date = date(today.year, today.month, 1)
+                year = today.year
+                month = today.month
+
+            # 指定された月の日数または、その月から過去30日間の表示仕様にあわせる
+            # ご要望：「クリックされた日から30日間のコメントを表示させる」
+            start_date = selected_start_date
+            end_date = start_date + timedelta(days=29) # 30日間
+
+            # 3. 2026年1月から「今月」までの月リストを動的に生成（年が経つごとに自動更新される仕様）
+            current_year = today.year
+            current_month = today.month
+
+            available_months = []
+            for y in range(2026, current_year + 1):
+                m_start = 1
+                m_end = 12 if y < current_year else current_month
+                for m in range(m_start, m_end + 1):
+                    available_months.append({
+                        'year': y,
+                        'month': m,
+                        'label': f"{y}年{m}月",
+                        'is_active': (y == year and m == month)
+                    })
+
+            # 該当ユーザーのInputScreenデータを取得（指定された期間内）
             comment_data = InputScreen.objects.filter(
                 user=target_user,
                 date__date__range=[start_date, end_date]
             ).exclude(
-                # コメントが両方とも空文字またはNULLの場合を除外
                 user_comment__exact='',
                 staff_comment__exact='',
             ).exclude(
                 user_comment__isnull=True,
                 staff_comment__isnull=True,
-            ).order_by("date__date") # 新しい日付順にソート
+            ).order_by("date__date")
+
             context = {
                 "home_screen": home_screen,
-                "selected_date": end_date,
+                "selected_date": start_date,
                 "comment_data": comment_data,
                 "target_user": target_user,
+                "available_months": available_months,
+                "current_year": year,
+                "current_month": month,
             }
-            # 新しいテンプレート 'comment_list.html' を作成してください
             return render(request, "comment_list.html", context)
 
         except HomeScreen.DoesNotExist:

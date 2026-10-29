@@ -422,7 +422,7 @@
         <!-- メインフォームの外側に配置された「戻る」ボタン -->
         <div class="pagination-container">
             {% if request.user.user_role == 1 %}
-                <a href="{% url 'selfCare:calendar_list'%}"><button type="button">戻る</button></a>
+                <a href="{{ calendar_back_url }}"><button type="button">戻る</button></a>
             {% else %}
                 <a href="{% url 'selfCare:user_list' %}"><button type="button">戻る</button></a>
             {% endif %}

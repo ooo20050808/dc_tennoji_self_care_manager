@@ -10,8 +10,22 @@
 <body>
     <div class="container">
         <h1>{{ target_user.user_name }}さんのコメント一覧</h1>
-        <h2>{{ selected_date|date:"Y年m月d日" }}までの過去30日間</h2>
-        <a href="{% url 'selfCare:calendar_list' %}" class="nav-link">カレンダー画面へ</a>
+        <h2>{{ current_year }}年{{ current_month }}月（開始日から30日間）</h2>
+
+        <!-- 月別選択ナビゲーション（2026年1月から今月まで動的生成） -->
+        <div class="month-navigation" style="text-align: center; margin: 20px 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
+            {% for m in available_months %}
+                <a href="?year={{ m.year }}&month={{ m.month }}"
+                   class="btn-month {% if m.is_active %}active-month{% endif %}"
+                   style="padding: 6px 12px; text-decoration: none; border: 1px solid #007bff; border-radius: 4px; background-color: {% if m.is_active %}#007bff{% else %}#fff{% endif %}; color: {% if m.is_active %}#fff{% else %}#007bff{% endif %};">
+                    {{ m.label }}
+                </a>
+            {% endfor %}
+        </div>
+
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="{% url 'selfCare:calendar_list' %}" class="nav-link">カレンダー画面へ</a>
+        </div>
 
         {% if comment_data %}
             <div class="comment-list">
@@ -39,10 +53,10 @@
             <p class="no-data-message">該当するコメントの記録はありません。</p>
         {% endif %}
 
-        <div class="nav-link">
-            <a href="{% url 'selfCare:detail_select'　home_screen_id=home_screen.id %}">アクション選択画面へ</a>
+        <div class="nav-link" style="text-align: center; margin-top: 20px;">
+            <a href="{% url 'selfCare:detail_select' home_screen_id=home_screen.id %}">アクション選択画面へ</a>
         </div>
-        <form method="post" action="{% url 'selfCare:logout' %}">
+        <form method="post" action="{% url 'selfCare:logout' %}" style="text-align: center; margin-top: 15px;">
             {% csrf_token %}
             <button type="submit" class="text-link logout-btn">ログアウト</button>
         </form>
