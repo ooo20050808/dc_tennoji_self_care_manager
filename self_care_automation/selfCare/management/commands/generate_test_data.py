@@ -73,12 +73,12 @@ class Command(BaseCommand):
             '確認しました。体調を崩さないよう無理せずいきましょう。'
         ]
 
-        # 体調詳細モーダルのコメント候補（すべての詳細項目にそれぞれ値を設定）
+        # 体調詳細モーダルのコメント候補
         detail_good_choices = ['ぐっすり眠れて朝から爽快です。', '体調万全で、学習に集中できました。', '特に問題なく、順調に過ごせました。']
         detail_caution_choices = ['少し睡眠不足ですが、午後から持ち直しました。', '肩こりがありますが、体調不良というほどではありません。', '疲れ気味なので、早めに休む予定です。']
         detail_poor_choices = ['頭痛がするため、こまめに休憩を取りながら進めました。', '少し体調を崩してしまったため、無理のない範囲で取り組みました。', '倦怠感があるため、スタッフに相談して作業を調整しました。']
 
-        # 4. 日ごとの勤怠・生活データの生成ループ（10月1日を含むend_dateまで確実に処理）
+        # 4. 日ごとの勤怠・生活データの生成ループ（10月1日を含めて確実に処理するため条件を <= に設定）
         current_date = start_date
         total_created = 0
         total_updated = 0
@@ -125,7 +125,7 @@ class Command(BaseCommand):
                 # 服薬チェック
                 med_m, med_n, med_nig = True, True, True
 
-                # 体調と体調詳細モーダル（すべての詳細項目を空にせず確実に入力）
+                # 体調と体調詳細モーダル（すべての詳細項目に必ず値が入るようにする）
                 condition = random.choice(['〇', '△', '✕'])
                 cond_detail_good = random.choice(detail_good_choices)
                 cond_detail_caution = random.choice(detail_caution_choices)
@@ -159,12 +159,20 @@ class Command(BaseCommand):
                     defaults_data['staff_entry_time'] = None
                     defaults_data['staff_leaving_time'] = None
 
-                # update_or_create を使用して、既存データがある場合でも必ず最新データで上書き保存する
+                # 確実にデータを生成または更新
                 input_screen, created = InputScreen.objects.update_or_create(
                     user=user,
                     date=home_screen,
                     defaults=defaults_data
                 )
+
+                # ビュー側の仕様（選択した体調以外を空にする処理）を回避するため、
+                # 直接オブジェクトのフィールドを再代入して強制保存する
+                input_screen.condition_detail_good = cond_detail_good
+                input_screen.condition_detail_caution = cond_detail_caution
+                input_screen.condition_detail_poor = cond_detail_poor
+                input_screen.save()
+
                 if created:
                     total_created += 1
                 else:
