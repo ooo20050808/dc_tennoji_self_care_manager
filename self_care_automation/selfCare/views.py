@@ -1736,7 +1736,8 @@ class CompleteView(LoginRequiredMixin, View):
             messages.error(request, '指定されたホーム画面データが見つかりませんでした。')
             return redirect("selfCare:calendar_list")
 
-# コメント一覧ビュー（月別選択および30日間表示対応）
+
+# コメント一覧ビュー（月別選択およびその月の最終日まで表示対応）
 class CommentListView(LoginRequiredMixin, View):
     def get(self, request, home_screen_id, *args, **kwargs):
         try:
@@ -1748,20 +1749,19 @@ class CommentListView(LoginRequiredMixin, View):
             year = int(request.GET.get('year', today.year))
             month = int(request.GET.get('month', today.month))
 
-            # 2. 基準となる日付を設定（その月の1日、またはその月のデータ範囲を決定するため）
+            # 2. 基準となる日付を設定（その月の1日）
             try:
-                selected_start_date = date(year, month, 1)
+                start_date = date(year, month, 1)
             except ValueError:
-                selected_start_date = date(today.year, today.month, 1)
+                start_date = date(today.year, today.month, 1)
                 year = today.year
                 month = today.month
 
-            # 指定された月の日数または、その月から過去30日間の表示仕様にあわせる
-            # ご要望：「クリックされた日から30日間のコメントを表示させる」
-            start_date = selected_start_date
-            end_date = start_date + timedelta(days=29) # 30日間
+            # その月の最終日（end_date）を動的に取得
+            last_day_num = calendar.monthrange(year, month)[1]
+            end_date = date(year, month, last_day_num)
 
-            # 3. 2026年1月から「今月」までの月リストを動的に生成（年が経つごとに自動更新される仕様）
+            # 3. 2026年1月から「今月」までの月リストを動的に生成
             current_year = today.year
             current_month = today.month
 
@@ -1777,8 +1777,15 @@ class CommentListView(LoginRequiredMixin, View):
                         'is_active': (y == year and m == month)
                     })
 
-            # 該当ユーザーのInputScreenデータを取得（指定された期間内）
-            comment_data = InputScreen.objects.filter(
+            # 4. 該当期間内の土曜開所日を取得
+            registered_saturdays = set(
+                SaturdayOpening.objects.filter(
+                    open_date__range=[start_date, end_date]
+                ).values_list('open_date', flat=True)
+            )
+
+            # 5. 該当ユーザーのInputScreenデータを取得（指定された月の範囲内）
+            raw_comment_data = InputScreen.objects.filter(
                 user=target_user,
                 date__date__range=[start_date, end_date]
             ).exclude(
@@ -1788,6 +1795,23 @@ class CommentListView(LoginRequiredMixin, View):
                 user_comment__isnull=True,
                 staff_comment__isnull=True,
             ).order_by("date__date")
+
+            # 6. 開所日（日曜日・非開所日の土曜日を除外）のみにフィルタリング
+            comment_data = []
+            for item in raw_comment_data:
+                item_date = item.date.date  # HomeScreenの日付オブジェクト
+                weekday = item_date.weekday()
+
+                # 日曜日(6)は常に除外
+                if weekday == calendar.SUNDAY:
+                    continue
+
+                # 土曜日(5)の場合、SaturdayOpeningに登録されていなければ除外
+                if weekday == calendar.SATURDAY:
+                    if item_date not in registered_saturdays:
+                        continue
+
+                comment_data.append(item)
 
             context = {
                 "home_screen": home_screen,
