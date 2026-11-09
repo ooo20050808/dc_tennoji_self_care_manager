@@ -514,7 +514,7 @@ class DeleteView(LoginRequiredMixin, View):
 		get_object_or_404(User, id=user_id).delete()
 		request.session.pop("target_action", None)
 		request.session.pop("target_user_id", None)
-		return redirect('selfCare:user_delete_complete')
+		return redirect('selfCare:delete_complete')
 
 
 class DeleteCompleteView(LoginRequiredMixin, TemplateView):
