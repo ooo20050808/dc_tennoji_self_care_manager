@@ -694,6 +694,9 @@ class InputScreenView(LoginRequiredMixin, View):
 				elif name != 'staff_comment' and name not in ['staff_entry_time', 'staff_leaving_time']:
 					field.widget.attrs['disabled'] = 'disabled'
 
+		entry_time_display = input_data.entry_time.strftime("%H:%M") if input_data.entry_time else ""
+		leaving_time_display = input_data.leaving_time.strftime("%H:%M") if input_data.leaving_time else ""
+
 		staff_entry_time_display = input_data.staff_entry_time.strftime("%H:%M") if input_data.staff_entry_time else ""
 		staff_leaving_time_display = input_data.staff_leaving_time.strftime(
 			"%H:%M") if input_data.staff_leaving_time else ""
@@ -711,6 +714,8 @@ class InputScreenView(LoginRequiredMixin, View):
 			"user_role": user_role,
 			"at_home_status": input_data.at_home,
 			"calendar_back_url": calendar_back_url,
+			"entry_time_display": entry_time_display,
+			"leaving_time_display": leaving_time_display,
 			"staff_entry_time_display": staff_entry_time_display,
 			"staff_leaving_time_display": staff_leaving_time_display
 		}
