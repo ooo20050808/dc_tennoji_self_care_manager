@@ -6,14 +6,21 @@ from selfCare.models import User, HomeScreen, InputScreen, SaturdayOpening
 
 
 class Command(BaseCommand):
-    help = '1月1日から10月31日までの勤怠・生活テストデータを自動生成します。'
+    help = '1月1日から当月末日（または指定月）までの勤怠・生活テストデータを自動生成します。'
 
     def handle(self, *args, **options):
-        current_year = timezone.now().year
+        now = timezone.now()
+        current_year = now.year
+        current_month = now.month
 
-        # 1. 対象期間の設定（1月1日 〜 10月31日まで）
+        # 1. 対象期間の設定（1月1日 〜 今月の末日まで自動設定）
         start_date = datetime(current_year, 1, 1).date()
-        end_date = datetime(current_year, 10, 31).date()
+
+        # 当月の最終日を自動計算
+        if current_month == 12:
+            end_date = datetime(current_year + 1, 1, 1).date() - timedelta(days=1)
+        else:
+            end_date = datetime(current_year, current_month + 1, 1).date() - timedelta(days=1)
 
         users = User.objects.filter(user_role=1)
         if not users.exists():
@@ -23,7 +30,8 @@ class Command(BaseCommand):
         # 土曜開所日の登録者（registered_by）とするスタッフユーザー（user_role=2）を取得
         staff_user = User.objects.filter(user_role=2).first()
         if not staff_user:
-            self.stdout.write(self.style.WARNING('user_role=2のスタッフが存在しないため、その他のスタッフ/管理者を検索します。'))
+            self.stdout.write(
+                self.style.WARNING('user_role=2のスタッフが存在しないため、その他のスタッフ/管理者を検索します。'))
             staff_user = User.objects.filter(user_role=3).first() or users.first()
 
         self.stdout.write(self.style.NOTICE(f'{start_date} から {end_date} までのテストデータ生成を開始します...'))
@@ -33,15 +41,17 @@ class Command(BaseCommand):
         saturday_created_count = 0
         while current_date <= end_date:
             if current_date.weekday() == 5:
-                if random.random() < 0.45:  # 登録率45%
-                    SaturdayOpening.objects.get_or_create(
-                        open_date=current_date,
-                        defaults={'registered_by': staff_user}
-                    )
-                    saturday_created_count += 1
+                if not SaturdayOpening.objects.filter(open_date=current_date).exists():
+                    if random.random() < 0.45:  # 登録率45%
+                        SaturdayOpening.objects.get_or_create(
+                            open_date=current_date,
+                            defaults={'registered_by': staff_user}
+                        )
+                        saturday_created_count += 1
             current_date += timedelta(days=1)
 
-        self.stdout.write(self.style.SUCCESS(f'土曜開所日を {saturday_created_count} 日分ランダム登録しました。'))
+        self.stdout.write(
+            self.style.SUCCESS(f'土曜開所日の新規登録を含め、確認を完了しました（追加: {saturday_created_count} 日分）。'))
 
         # 3. 動的生成用のバリエーション候補
         morning_works = [
@@ -73,12 +83,17 @@ class Command(BaseCommand):
             '確認しました。体調を崩さないよう無理せずいきましょう。'
         ]
 
-        # 体調詳細モーダルのコメント候補（すべての詳細項目にそれぞれ値を設定）
-        detail_good_choices = ['ぐっすり眠れて朝から爽快です。', '体調万全で、学習に集中できました。', '特に問題なく、順調に過ごせました。']
-        detail_caution_choices = ['少し睡眠不足ですが、午後から持ち直しました。', '肩こりがありますが、体調不良というほどではありません。', '疲れ気味なので、早めに休む予定です。']
-        detail_poor_choices = ['頭痛がするため、こまめに休憩を取りながら進めました。', '少し体調を崩してしまったため、無理のない範囲で取り組みました。', '倦怠感があるため、スタッフに相談して作業を調整しました。']
+        # 体調詳細モーダルのコメント候補
+        detail_good_choices = ['ぐっすり眠れて朝から爽快です。', '体調万全で、学習に集中できました。',
+                               '特に問題なく、順調に過ごせました。']
+        detail_caution_choices = ['少し睡眠不足ですが、午後から持ち直しました。',
+                                  '肩こりがありますが、体調不良というほどではありません。',
+                                  '疲れ気味なので、早めに休む予定です。']
+        detail_poor_choices = ['頭痛がするため、こまめに休憩を取りながら進めました。',
+                               '少し体調を崩してしまったため、無理のない範囲で取り組みました。',
+                               '倦怠感があるため、スタッフに相談して作業を調整しました。']
 
-        # 4. 日ごとの勤怠・生活データの生成ループ（10月31日まで拡張）
+        # 4. 日ごとの勤怠・生活データの生成ループ
         current_date = start_date
         total_created = 0
         total_updated = 0
@@ -91,7 +106,7 @@ class Command(BaseCommand):
                 current_date += timedelta(days=1)
                 continue
 
-            # 土曜日の場合、SaturdayOpeningに登録されている開所日かチェック（登録されていない土曜日は完全にスキップ）
+            # 土曜日の場合、SaturdayOpeningに登録されている開所日かチェック
             if weekday == 5:
                 is_open_saturday = SaturdayOpening.objects.filter(open_date=current_date).exists()
                 if not is_open_saturday:
@@ -135,7 +150,7 @@ class Command(BaseCommand):
                     if med_m and med_n and med_nig:
                         med_nig = False
 
-                # 体調と体調詳細モーダル（すべての詳細項目に必ず値が入るようにする）
+                # 体調と体調詳細モーダル
                 condition = random.choice(['〇', '△', '✕'])
                 cond_detail_good = random.choice(detail_good_choices)
                 cond_detail_caution = random.choice(detail_caution_choices)
@@ -169,14 +184,12 @@ class Command(BaseCommand):
                     defaults_data['staff_entry_time'] = None
                     defaults_data['staff_leaving_time'] = None
 
-                # 確実にデータを生成または更新
                 input_screen, created = InputScreen.objects.update_or_create(
                     user=user,
                     date=home_screen,
                     defaults=defaults_data
                 )
 
-                # 体調の詳細フィールドを確実に強制保存
                 input_screen.condition_detail_good = cond_detail_good
                 input_screen.condition_detail_caution = cond_detail_caution
                 input_screen.condition_detail_poor = cond_detail_poor
