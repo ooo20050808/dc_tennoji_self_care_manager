@@ -780,8 +780,13 @@ class CommentListView(LoginRequiredMixin, View):
 		home_screen = get_object_or_404(HomeScreen, id=home_screen_id)
 		target_user = home_screen.user
 		today = timezone.now().date()
-		year = int(request.GET.get('year', today.year))
-		month = int(request.GET.get('month', today.month))
+
+		try:
+			year = int(request.GET.get('year', today.year))
+			month = int(request.GET.get('month', today.month))
+		except ValueError:
+			year = today.year
+			month = today.month
 
 		start_date = date(year, month, 1)
 		end_date = date(year, month, calendar.monthrange(year, month)[1])
@@ -795,6 +800,7 @@ class CommentListView(LoginRequiredMixin, View):
 			date__date__range=[start_date, end_date]
 		).exclude(user_comment__exact='', staff_comment__exact='').order_by("date__date")
 
+		# 開業日（日曜・未登録の土曜を除く）のみに絞り込み
 		comment_data = []
 		for item in raw_comments:
 			item_date = item.date.date
@@ -804,6 +810,26 @@ class CommentListView(LoginRequiredMixin, View):
 				continue
 			comment_data.append(item)
 
+		# 2026年1月から今月までの月選択肢を動的生成
+		available_months = []
+		start_year, start_month = 2026, 1
+		curr_year, curr_month = today.year, today.month
+
+		y, m = start_year, start_month
+		while (y < curr_year) or (y == curr_year and m <= curr_month):
+			label = f"{y}年{m}月"
+			is_active = (y == year and m == month)
+			available_months.append({
+				'year': y,
+				'month': m,
+				'label': label,
+				'is_active': is_active,
+			})
+			m += 1
+			if m > 12:
+				m = 1
+				y += 1
+
 		return render(request, "comment_list.html", {
 			"home_screen": home_screen,
 			"selected_date": start_date,
@@ -811,6 +837,7 @@ class CommentListView(LoginRequiredMixin, View):
 			"target_user": target_user,
 			"current_year": year,
 			"current_month": month,
+			"available_months": available_months,
 		})
 
 
