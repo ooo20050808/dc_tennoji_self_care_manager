@@ -87,10 +87,10 @@ class InputScreenForm(forms.ModelForm):
 								   widget=forms.Select(attrs={'class': 'time-input'}))
 	leaving_time = forms.ChoiceField(label="退出時刻", choices=LEAVING_TIME_CHOICES, required=False,
 									 widget=forms.Select(attrs={'class': 'time-input'}))
-	staff_entry_time = forms.TimeField(label="スタッフ入室時刻", widget=forms.TimeInput(attrs={'type': 'time'}),
-									   required=False)
-	staff_leaving_time = forms.ChoiceField(label="スタッフ退出時刻", choices=LEAVING_TIME_CHOICES, required=False,
-										   widget=forms.Select(attrs={'class': 'time-input'}))
+	staff_entry_time = forms.ChoiceField(label="スタッフ入室時刻", choices=LEAVING_TIME_CHOICES, required=False,
+										 widget=forms.Select(attrs={'class': 'time-input'}))
+	staff_leaving_time = forms.ChoiceField(label="スタッフ入室時刻", choices=LEAVING_TIME_CHOICES, required=False,
+										 widget=forms.Select(attrs={'class': 'time-input'}))
 
 	sleep_time_hours = forms.IntegerField(
 		label="睡眠時間（時間）",

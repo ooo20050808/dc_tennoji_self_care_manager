@@ -33,16 +33,12 @@
                     {% endif %}
                 </div>
 
+                <!-- 通常時：利用者入力（権限: 利用者） -->
                 {% if not at_home_status and request.user.user_role == 1 %}
                     <div class="input-row">
-                        <label class="label-inline">入室 (利用者入力)</label>
+                        <label class="label-inline" for="{{ form.entry_time.id_for_label }}">入室 (利用者入力)</label>
                         <span class="time-input-group">
-                            <select name="entry_time" id="entry_time" {% if form.entry_time.field.widget.attrs.disabled or request.user.user_role == 2 %}disabled{% endif %}>
-                                <option value="" {% if not entry_time_display %}selected{% endif %}>--:--</option>
-                                {% for time_str in staff_leaving_time_choices %}
-                                    <option value="{{ time_str }}" {% if entry_time_display == time_str %}selected{% endif %}>{{ time_str }}</option>
-                                {% endfor %}
-                            </select>
+                            {{ form.entry_time }}
                         </span>
                         {% if form.entry_time.errors %}
                             <div class="error-message">{{ form.entry_time.errors }}</div>
@@ -52,16 +48,7 @@
                     <div class="input-row">
                         <label class="label-inline" for="{{ form.leaving_time.id_for_label }}">退出 (利用者入力)</label>
                         <span class="time-input-group">
-                            <select name="{{ form.leaving_time.name }}" id="{{ form.leaving_time.id_for_label }}" {% if form.leaving_time.field.widget.attrs.disabled %}disabled{% endif %}>
-                                <option value="" {% if not leaving_time_display and not staff_leaving_time_display %}selected{% endif %}>--:--</option>
-                                {% for time_str in staff_leaving_time_choices %}
-                                    <option value="{{ time_str }}"
-                                        {% if at_home_status and staff_leaving_time_display == time_str %}selected{% endif %}
-                                        {% if not at_home_status and leaving_time_display == time_str %}selected{% endif %}>
-                                        {{ time_str }}
-                                    </option>
-                                {% endfor %}
-                            </select>
+                            {{ form.leaving_time }}
                         </span>
                         {% if form.leaving_time.errors %}
                             <div class="error-message">{{ form.leaving_time.errors }}</div>
@@ -69,42 +56,29 @@
                     </div>
                 {% endif %}
 
+                <!-- 通常時：利用者入力（権限: スタッフ等で閲覧する場合） -->
                 {% if not at_home_status and request.user.user_role == 2 %}
                     <div class="input-row">
-                        <label class="label-inline">入室 (利用者入力)</label>
+                        <label class="label-inline" for="{{ form.entry_time.id_for_label }}">入室 (利用者入力)</label>
                         <span class="time-input-group">
-                            <select name="entry_time" id="entry_time" {% if form.entry_time.field.widget.attrs.disabled or request.user.user_role == 2 %}disabled{% endif %}>
-                                <option value="" {% if not entry_time_display %}selected{% endif %}>--:--</option>
-                                {% for time_str in staff_leaving_time_choices %}
-                                    <option value="{{ time_str }}" {% if entry_time_display == time_str %}selected{% endif %}>{{ time_str }}</option>
-                                {% endfor %}
-                            </select>
+                            {{ form.entry_time }}
                         </span>
                     </div>
 
                     <div class="input-row">
-                        <label class="label-inline">退出 (利用者入力)</label>
+                        <label class="label-inline" for="{{ form.leaving_time.id_for_label }}">退出 (利用者入力)</label>
                         <span class="time-input-group">
-                            <select name="{{ form.leaving_time.name }}" id="{{ form.leaving_time.id_for_label }}" {% if form.leaving_time.field.widget.attrs.disabled %}disabled{% endif %}>
-                                <option value="" {% if not leaving_time_display %}selected{% endif %}>--:--</option>
-                                {% for time_str in staff_leaving_time_choices %}
-                                    <option value="{{ time_str }}" {% if leaving_time_display == time_str %}selected{% endif %}>{{ time_str }}</option>
-                                {% endfor %}
-                            </select>
+                            {{ form.leaving_time }}
                         </span>
                     </div>
                 {% endif %}
 
+                <!-- 在宅時：スタッフ入力 -->
                 {% if at_home_status %}
                     <div class="input-row">
-                        <label class="label-inline">入室 (スタッフ入力)</label>
+                        <label class="label-inline" for="{{ form.staff_entry_time.id_for_label }}">入室 (スタッフ入力)</label>
                         <span class="time-input-group">
-                            <select name="staff_entry_time" id="staff_entry_time" {% if request.user.user_role == 1 %}disabled{% endif %}>
-                                <option value="" {% if not staff_entry_time_display %}selected{% endif %}>--:--</option>
-                                {% for time_str in staff_leaving_time_choices %}
-                                    <option value="{{ time_str }}" {% if staff_entry_time_display == time_str %}selected{% endif %}>{{ time_str }}</option>
-                                {% endfor %}
-                            </select>
+                            {{ form.staff_entry_time }}
                         </span>
                         {% if request.user.user_role == 2 and form.staff_entry_time.errors %}
                             <div class="error-message">{{ form.staff_entry_time.errors }}</div>
@@ -112,14 +86,9 @@
                     </div>
 
                     <div class="input-row">
-                        <label class="label-inline">退出 (スタッフ入力)</label>
+                        <label class="label-inline" for="{{ form.staff_leaving_time.id_for_label }}">退出 (スタッフ入力)</label>
                         <span class="time-input-group">
-                            <select name="{{ form.staff_leaving_time.name }}" id="{{ form.staff_leaving_time.id_for_label }}" {% if request.user.user_role == 1 %}disabled{% endif %}>
-                                <option value="" {% if not staff_leaving_time_display %}selected{% endif %}>--:--</option>
-                                {% for time_str in staff_leaving_time_choices %}
-                                    <option value="{{ time_str }}" {% if staff_leaving_time_display == time_str %}selected{% endif %}>{{ time_str }}</option>
-                                {% endfor %}
-                            </select>
+                            {{ form.staff_leaving_time }}
                         </span>
                         {% if request.user.user_role == 2 and form.staff_leaving_time.errors %}
                             <div class="error-message">{{ form.staff_leaving_time.errors }}</div>
