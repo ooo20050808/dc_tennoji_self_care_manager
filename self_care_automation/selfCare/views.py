@@ -694,6 +694,10 @@ class InputScreenView(LoginRequiredMixin, View):
 				elif name != 'staff_comment' and name not in ['staff_entry_time', 'staff_leaving_time']:
 					field.widget.attrs['disabled'] = 'disabled'
 
+		staff_entry_time_display = input_data.staff_entry_time.strftime("%H:%M") if input_data.staff_entry_time else ""
+		staff_leaving_time_display = input_data.staff_leaving_time.strftime(
+			"%H:%M") if input_data.staff_leaving_time else ""
+
 		cal_year = request.session.get('calendar_year', home_screen.date.year)
 		cal_month = request.session.get('calendar_month', home_screen.date.month)
 		calendar_back_url = f"{reverse('selfCare:calendar_list')}?year={cal_year}&month={cal_month}"
@@ -707,6 +711,8 @@ class InputScreenView(LoginRequiredMixin, View):
 			"user_role": user_role,
 			"at_home_status": input_data.at_home,
 			"calendar_back_url": calendar_back_url,
+			"staff_entry_time_display": staff_entry_time_display,
+			"staff_leaving_time_display": staff_leaving_time_display
 		}
 		return render(request, 'input_screen.html', context)
 
