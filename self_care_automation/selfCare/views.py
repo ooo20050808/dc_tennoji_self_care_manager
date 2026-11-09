@@ -209,12 +209,15 @@ class CalendarListView(LoginRequiredMixin, ListView):
 				})
 			annotated_month_days.append(annotated_week)
 
+		prev_month_date = start_date - timedelta(days=1)
+		next_month_date = end_date + timedelta(days=1)
+
 		context.update({
 			"year": year,
 			"month": month,
 			"month_days_annotated": annotated_month_days,
-			'prev_month_url': f"?year={start_date - timedelta(days=1).year}&month={start_date - timedelta(days=1).month}",
-			'next_month_url': f"?year={end_date + timedelta(days=1).year}&month={end_date + timedelta(days=1).month}",
+			'prev_month_url': f"?year={prev_month_date.year}&month={prev_month_date.month}",
+			'next_month_url': f"?year={next_month_date.year}&month={next_month_date.month}",
 			"user_role": self.request.user.user_role,
 			"user": self.request.user
 		})
