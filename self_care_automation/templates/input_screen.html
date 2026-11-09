@@ -36,22 +36,22 @@
                 <!-- 通常時：利用者入力（権限: 利用者） -->
                 {% if not at_home_status and request.user.user_role == 1 %}
                     <div class="input-row">
-                        <label class="label-inline" for="{{ form.entry_time.id_for_label }}">入室 (利用者入力)</label>
+                        <label class="label-inline" for="{{ form.entry_time_display.id_for_label }}">入室 (利用者入力)</label>
                         <span class="time-input-group">
-                            {{ form.entry_time }}
+                            {{ form.entry_time_display }}
                         </span>
-                        {% if form.entry_time.errors %}
-                            <div class="error-message">{{ form.entry_time.errors }}</div>
+                        {% if form.entry_time_display.errors %}
+                            <div class="error-message">{{ form.entry_time_display.errors }}</div>
                         {% endif %}
                     </div>
 
                     <div class="input-row">
-                        <label class="label-inline" for="{{ form.leaving_time.id_for_label }}">退出 (利用者入力)</label>
+                        <label class="label-inline" for="{{ form.leaving_time_display.id_for_label }}">退出 (利用者入力)</label>
                         <span class="time-input-group">
-                            {{ form.leaving_time }}
+                            {{ form.leaving_time_display }}
                         </span>
-                        {% if form.leaving_time.errors %}
-                            <div class="error-message">{{ form.leaving_time.errors }}</div>
+                        {% if form.leaving_time_display.errors %}
+                            <div class="error-message">{{ form.leaving_time_display.errors }}</div>
                         {% endif %}
                     </div>
                 {% endif %}
@@ -59,16 +59,16 @@
                 <!-- 通常時：利用者入力（権限: スタッフ等で閲覧する場合） -->
                 {% if not at_home_status and request.user.user_role == 2 %}
                     <div class="input-row">
-                        <label class="label-inline" for="{{ form.entry_time.id_for_label }}">入室 (利用者入力)</label>
+                        <label class="label-inline" for="{{ form.entry_time_display.id_for_label }}">入室 (利用者入力)</label>
                         <span class="time-input-group">
-                            {{ form.entry_time }}
+                            {{ form.entry_time_display }}
                         </span>
                     </div>
 
                     <div class="input-row">
-                        <label class="label-inline" for="{{ form.leaving_time.id_for_label }}">退出 (利用者入力)</label>
+                        <label class="label-inline" for="{{ form.leaving_time_display.id_for_label }}">退出 (利用者入力)</label>
                         <span class="time-input-group">
-                            {{ form.leaving_time }}
+                            {{ form.leaving_time_display }}
                         </span>
                     </div>
                 {% endif %}
@@ -78,20 +78,20 @@
                     <div class="input-row">
                         <label class="label-inline" for="{{ form.staff_entry_time.id_for_label }}">入室 (スタッフ入力)</label>
                         <span class="time-input-group">
-                            {{ form.staff_entry_time }}
+                            {{ form.staff_entry_time_display }}
                         </span>
-                        {% if request.user.user_role == 2 and form.staff_entry_time.errors %}
-                            <div class="error-message">{{ form.staff_entry_time.errors }}</div>
+                        {% if request.user.user_role == 2 and form.staff_entry_time_display.errors %}
+                            <div class="error-message">{{ form.staff_entry_time_display.errors }}</div>
                         {% endif %}
                     </div>
 
                     <div class="input-row">
-                        <label class="label-inline" for="{{ form.staff_leaving_time.id_for_label }}">退出 (スタッフ入力)</label>
+                        <label class="label-inline" for="{{ form.staff_leaving_time_display.id_for_label }}">退出 (スタッフ入力)</label>
                         <span class="time-input-group">
-                            {{ form.staff_leaving_time }}
+                            {{ form.staff_leaving_time_display }}
                         </span>
-                        {% if request.user.user_role == 2 and form.staff_leaving_time.errors %}
-                            <div class="error-message">{{ form.staff_leaving_time.errors }}</div>
+                        {% if request.user.user_role == 2 and form.staff_leaving_time_display.errors %}
+                            <div class="error-message">{{ form.staff_leaving_time_display.errors }}</div>
                         {% endif %}
                     </div>
                 {% endif %}
