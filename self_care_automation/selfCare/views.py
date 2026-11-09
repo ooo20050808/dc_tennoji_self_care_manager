@@ -350,7 +350,7 @@ class UserAuthView(LoginRequiredMixin, View):
 		target_user = get_object_or_404(User, id=user_id)
 
 		if form.is_valid() and target_user.email == form.cleaned_data.get("email"):
-			return redirect("selfCare:user_delete_confirm" if action_value == 'delete' else "selfCare:edit_screen",
+			return redirect("selfCare:delete_confirm" if action_value == 'delete' else "selfCare:edit_screen",
 							user_id=user_id)
 
 		title = f"{target_user.user_name}さんの削除認証" if action_value == 'delete' else f"{target_user.user_name}さんの編集認証"
