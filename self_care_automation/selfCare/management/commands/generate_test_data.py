@@ -36,22 +36,24 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.NOTICE(f'{start_date} から {end_date} までのテストデータ生成を開始します...'))
 
-        # 2. 期間内の「土曜日（weekday()==5）のみ」を45%の確率で「土曜開所日 (SaturdayOpening)」としてスタッフ名義で登録
+        # 2. 期間内の「土曜日（weekday()==5）」を一旦すべてクリアするか、既存をリセットして45%の確率で再登録
+        SaturdayOpening.objects.filter(open_date__range=[start_date, end_date]).delete()
+
         current_date = start_date
         saturday_created_count = 0
         while current_date <= end_date:
             if current_date.weekday() == 5:
-                if not SaturdayOpening.objects.filter(open_date=current_date).exists():
-                    if random.random() < 0.45:  # 登録率45%
-                        SaturdayOpening.objects.get_or_create(
-                            open_date=current_date,
-                            defaults={'registered_by': staff_user}
-                        )
-                        saturday_created_count += 1
+                if random.random() < 0.45:  # 登録率45%
+                    SaturdayOpening.objects.create(
+                        open_date=current_date,
+                        registered_by=staff_user
+                    )
+                    saturday_created_count += 1
             current_date += timedelta(days=1)
 
         self.stdout.write(
-            self.style.SUCCESS(f'土曜開所日の新規登録を含め、確認を完了しました（追加: {saturday_created_count} 日分）。'))
+            self.style.SUCCESS(
+                f'土曜開所日を45%の確率でランダム再登録しました（登録数: {saturday_created_count} 日分）。'))
 
         # 3. 動的生成用のバリエーション候補
         morning_works = [
