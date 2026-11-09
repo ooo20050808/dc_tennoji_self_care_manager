@@ -363,7 +363,7 @@
 
         <div class="pagination-container">
             {% if request.user.user_role == 1 %}
-                <a href="{{ selfCare:calendar_list }}"><button type="button">戻る</button></a>
+                <a href="{ selfCare:calendar_list }"><button type="button">戻る</button></a>
             {% else %}
                 <a href="{% url 'selfCare:user_list' %}"><button type="button">戻る</button></a>
             {% endif %}
