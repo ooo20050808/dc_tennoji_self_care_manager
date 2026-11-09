@@ -151,6 +151,12 @@ class InputScreenForm(forms.ModelForm):
 	def clean_leaving_time(self):
 		return self._convert_time_string(self.cleaned_data.get('leaving_time'))
 
+	def clean_staff_entry_time(self):
+		return self._convert_time_string(self.cleaned_data.get('staff_entry_time'))
+
+	def clean_staff_leaving_time(self):
+		return self._convert_time_string(self.cleaned_data.get('staff_leaving_time'))
+
 	def clean_sleep_time_hours(self):
 		data = self.data.get('sleep_time_hours')
 		if not data and data != '0':
@@ -166,10 +172,7 @@ class InputScreenForm(forms.ModelForm):
 		entry_time = cleaned_data.get('entry_time')
 		leaving_time = cleaned_data.get('leaving_time')
 		staff_entry_time = cleaned_data.get('staff_entry_time')
-		staff_leaving_time_str = self.cleaned_data.get('staff_leaving_time')
-		staff_leaving_time = self._convert_time_string(staff_leaving_time_str)
-		if staff_leaving_time:
-			cleaned_data['staff_leaving_time'] = staff_leaving_time
+		staff_leaving_time = cleaned_data.get('staff_leaving_time')
 
 		# 在宅時のスタッフ入退室バリデーション
 		if at_home:
