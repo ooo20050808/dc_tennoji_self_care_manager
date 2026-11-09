@@ -133,6 +133,11 @@ class InputScreenForm(forms.ModelForm):
 	def __init__(self, *args, user=None, **kwargs):
 		self.user = kwargs.pop('user', None)
 		super().__init__(*args, **kwargs)
+		if self.instance and self.instance.pk:
+			for field_name in ['entry_time', 'leaving_time', 'staff_entry_time', 'staff_leaving_time']:
+				val = getattr(self.instance, field_name, None)
+				if isinstance(val, time):
+					self.initial[field_name] = val.strftime('%H:%M')
 
 	def _convert_time_string(self, time_str):
 		"""文字列の時刻を datetime.time オブジェクトに変換します。"""
