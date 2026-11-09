@@ -4,62 +4,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ target_user.user_name }}さんのコメント一覧</title>
+    <title>登録完了</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <div class="container">
-        <h1>{{ target_user.user_name }}さんのコメント一覧</h1>
-        <h2>{{ current_year }}年{{ current_month }}月（1日〜最終日まで）</h2>
+    <div class="container complete-screen-container">
+        <h1 class="my-4">登録完了画面</h1>
 
-        <!-- 月別選択ナビゲーション（2026年1月から今月まで動的生成） -->
-        <div class="month-navigation" style="text-align: center; margin: 20px 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
-            {% for m in available_months %}
-                <a href="?year={{ m.year }}&month={{ m.month }}"
-                   class="btn-month {% if m.is_active %}active-month{% endif %}"
-                   style="padding: 6px 12px; text-decoration: none; border: 1px solid #007bff; border-radius: 4px; background-color: {% if m.is_active %}#007bff{% else %}#fff{% endif %}; color: {% if m.is_active %}#fff{% else %}#007bff{% endif %};">
-                    {{ m.label }}
-                </a>
-            {% endfor %}
+        <div class="alert alert-success" role="alert">
+            {{ selected_date|date:"Y年m月d日" }} の入室・退出時刻の登録が完了しました。
         </div>
 
-        <div style="text-align: center; margin-bottom: 20px;">
-            <a href="{% url 'selfCare:calendar_list' %}" class="nav-link">カレンダー画面へ</a>
-        </div>
+        {% if user_role == 1 %}
+            <h2 class="mt-5 mb-3">データ推移グラフ</h2>
 
-        {% if comment_data %}
-            <div class="comment-list">
-                {% for data in comment_data %}
-                    <div class="comment-item">
-                        <p class="comment-date">{{ data.date.date|date:"Y/m/d" }}</p>
+            {% if sleep_chart_image or condition_chart_image %}
+                <p>過去30日間のデータ推移を確認できます。</p>
+            {% else %}
+                <p class="text-muted">過去30日間のデータが不足しているため、グラフは表示されません。</p>
+            {% endif %}
 
-                        {% if data.user_comment %}
-                            <div class="comment user-comment">
-                                <span class="comment-label">利用者コメント:</span>
-                                <p>{{ data.user_comment|linebreaksbr }}</p>
-                            </div>
-                        {% endif %}
-
-                        {% if data.staff_comment %}
-                            <div class="comment staff-comment">
-                                <span class="comment-label">スタッフコメント:</span>
-                                <p>{{ data.staff_comment|linebreaksbr }}</p>
-                            </div>
-                        {% endif %}
+            <div class="complete-screen-chart-container">
+                {% if sleep_chart_image %}
+                    <div class="card complete-screen-chart">
+                        <div class="card-header">睡眠時間グラフ</div>
+                        <div class="card-body">
+                            <img src="{{ sleep_chart_image }}" alt="睡眠時間のグラフ" class="img-fluid">
+                        </div>
                     </div>
-                {% endfor %}
+                {% endif %}
+
+                {% if condition_chart_image %}
+                    <div class="card complete-screen-chart">
+                        <div class="card-header">体調グラフ</div>
+                        <div class="card-body">
+                            <img src="{{ condition_chart_image }}" alt="体調のグラフ" class="img-fluid">
+                        </div>
+                    </div>
+                {% endif %}
             </div>
         {% else %}
-            <p class="no-data-message">該当するコメントの記録はありません。</p>
+            <p class="text-muted">あなたの権限ではデータ登録完了後のグラフ表示は行われません。</p>
         {% endif %}
 
-        <div class="nav-link" style="text-align: center; margin-top: 20px;">
-            <a href="{% url 'selfCare:detail_select' home_screen_id=home_screen.id %}">アクション選択画面へ</a>
+        <div class="mt-4">
+            <a href="{% url 'selfCare:calendar_list' %}" class="nav-link">カレンダー画面へ</a>
+            {% if user_role == 2 %}
+                <a href="{% url 'selfCare:saturday_choice' %}" class="nav-link">スタッフメニューへ</a>
+            {% else %}
+                <a href="{% url 'selfCare:detail_select' home_screen_id=home_screen_id %}" class="nav-link">アクション選択画面へ</a>
+            {% endif %}
+
+            <form action="{% url 'selfCare:logout' %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="button button-secondary">ログアウト</button>
+            </form>
         </div>
-        <form method="post" action="{% url 'selfCare:logout' %}" style="text-align: center; margin-top: 15px;">
-            {% csrf_token %}
-            <button type="submit" class="text-link logout-btn">ログアウト</button>
-        </form>
     </div>
 </body>
 </html>

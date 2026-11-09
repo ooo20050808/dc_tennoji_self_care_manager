@@ -22,10 +22,14 @@
 
                     <dt>権限 (User Role)</dt>
                     <dd>
-                        {% if create_data.user_role == 1 %}利用者
-                        {% elif create_data.user_role == 2 %}スタッフ
-                        {% elif create_data.user_role == 3 %}管理者
-                        {% else %}未定義
+                        {% if create_data.user_role == 1 %}
+                            利用者
+                        {% elif create_data.user_role == 2 %}
+                            スタッフ
+                        {% elif create_data.user_role == 3 %}
+                            管理者
+                        {% else %}
+                            未定義
                         {% endif %}
                     </dd>
 
@@ -39,14 +43,14 @@
                 <button type="submit" name="action" value="confirm" class="button primary">作成</button>
                 <button type="submit" name="action" value="back" class="button secondary">戻る</button>
             </form>
-         <div class="button-row">
-                        <a href="{% url 'selfCare:admin_screen' %}" class="button button-primary">管理者画面に戻る</a>
-                    </div>
+
+            <div class="button-row">
+                <a href="{% url 'selfCare:admin_screen' %}" class="button button-primary">管理者画面に戻る</a>
+            </div>
         {% else %}
             <p class="error">作成データが存在しません。</p>
             <p class="link-area"><a href="{% url 'selfCare:user_create_screen' %}">新規作成画面に戻る</a></p>
         {% endif %}
-
     </div>
 </body>
 </html>

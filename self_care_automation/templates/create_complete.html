@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>管理者画面</title>
+    <title>作成完了</title>
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
@@ -16,8 +16,8 @@
         </div>
 
         <div class="button-column">
-             <a href="{% url 'selfCare:user_list' %}" class="button button-primary">ユーザーリストに戻る</a>
-             <a href="{% url 'selfCare:admin_screen' %}" class="button button-primary">管理者画面に戻る</a>
+            <a href="{% url 'selfCare:user_list' %}" class="button button-primary">ユーザーリストに戻る</a>
+            <a href="{% url 'selfCare:admin_screen' %}" class="button button-primary">管理者画面に戻る</a>
             <form action="{% url 'selfCare:logout' %}" method="post">
                 {% csrf_token %}
                 <button type="submit" class="button button-secondary">ログアウト</button>

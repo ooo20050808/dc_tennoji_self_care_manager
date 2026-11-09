@@ -12,9 +12,10 @@
         <h1 class="date-header">入力画面</h1>
         <h1 class="date-header">日付: {{ selected_date|date:"Y年m月d日" }}</h1>
         <h2 class="user-name-header">利用者: {{ target_user_name }}</h2>
+
         <div class="pagination-container">
             {% if user_role == 2 %}
-                <a href="{% url 'selfCare:saturday_choice'%}" ><button type="button">スタッフメニューへ</button></a>
+                <a href="{% url 'selfCare:saturday_choice' %}"><button type="button">スタッフメニューへ</button></a>
             {% else %}
                 <a href="{% url 'selfCare:detail_select' home_screen_id=home_screen.id %}"><button type="button">アクション選択画面へ</button></a>
             {% endif %}
@@ -33,19 +34,13 @@
                 </div>
 
                 {% if not at_home_status and request.user.user_role == 1 %}
-                   <div class="input-row">
+                    <div class="input-row">
                         <label class="label-inline">入室 (利用者入力)</label>
                         <span class="time-input-group">
-                            <select
-                                name="entry_time"
-                                id="entry_time"
-                                {% if form.entry_time.field.widget.attrs.disabled or request.user.user_role == 2 %}disabled{% endif %}
-                            >
+                            <select name="entry_time" id="entry_time" {% if form.entry_time.field.widget.attrs.disabled or request.user.user_role == 2 %}disabled{% endif %}>
                                 <option value="" {% if not entry_time_display %}selected{% endif %}>--:--</option>
                                 {% for time_str in staff_leaving_time_choices %}
-                                    <option value="{{ time_str }}"
-                                        {% if entry_time_display == time_str %}selected{% endif %}
-                                        >{{ time_str }}</option>
+                                    <option value="{{ time_str }}" {% if entry_time_display == time_str %}selected{% endif %}>{{ time_str }}</option>
                                 {% endfor %}
                             </select>
                         </span>
@@ -57,17 +52,14 @@
                     <div class="input-row">
                         <label class="label-inline" for="{{ form.leaving_time.id_for_label }}">退出 (利用者入力)</label>
                         <span class="time-input-group">
-                            <select
-                                name="{{ form.leaving_time.name }}"
-                                id="{{ form.leaving_time.id_for_label }}"
-                                {% if form.leaving_time.field.widget.attrs.disabled %}disabled{% endif %}
-                            >
+                            <select name="{{ form.leaving_time.name }}" id="{{ form.leaving_time.id_for_label }}" {% if form.leaving_time.field.widget.attrs.disabled %}disabled{% endif %}>
                                 <option value="" {% if not leaving_time_display and not staff_leaving_time_display %}selected{% endif %}>--:--</option>
                                 {% for time_str in staff_leaving_time_choices %}
                                     <option value="{{ time_str }}"
                                         {% if at_home_status and staff_leaving_time_display == time_str %}selected{% endif %}
-                                        {% if not at_home_status and leaving_time_display == time_str %}selected{% endif %}
-                                        >{{ time_str }}</option>
+                                        {% if not at_home_status and leaving_time_display == time_str %}selected{% endif %}>
+                                        {{ time_str }}
+                                    </option>
                                 {% endfor %}
                             </select>
                         </span>
@@ -78,19 +70,13 @@
                 {% endif %}
 
                 {% if not at_home_status and request.user.user_role == 2 %}
-                   <div class="input-row">
+                    <div class="input-row">
                         <label class="label-inline">入室 (利用者入力)</label>
                         <span class="time-input-group">
-                            <select
-                                name="entry_time"
-                                id="entry_time"
-                                {% if form.entry_time.field.widget.attrs.disabled or request.user.user_role == 2 %}disabled{% endif %}
-                            >
+                            <select name="entry_time" id="entry_time" {% if form.entry_time.field.widget.attrs.disabled or request.user.user_role == 2 %}disabled{% endif %}>
                                 <option value="" {% if not entry_time_display %}selected{% endif %}>--:--</option>
                                 {% for time_str in staff_leaving_time_choices %}
-                                    <option value="{{ time_str }}"
-                                        {% if entry_time_display == time_str %}selected{% endif %}
-                                        >{{ time_str }}</option>
+                                    <option value="{{ time_str }}" {% if entry_time_display == time_str %}selected{% endif %}>{{ time_str }}</option>
                                 {% endfor %}
                             </select>
                         </span>
@@ -99,16 +85,10 @@
                     <div class="input-row">
                         <label class="label-inline">退出 (利用者入力)</label>
                         <span class="time-input-group">
-                            <select
-                                name="{{ form.leaving_time.name }}"
-                                id="{{ form.leaving_time.id_for_label }}"
-                                {% if form.leaving_time.field.widget.attrs.disabled %}disabled{% endif %}
-                            >
+                            <select name="{{ form.leaving_time.name }}" id="{{ form.leaving_time.id_for_label }}" {% if form.leaving_time.field.widget.attrs.disabled %}disabled{% endif %}>
                                 <option value="" {% if not leaving_time_display %}selected{% endif %}>--:--</option>
                                 {% for time_str in staff_leaving_time_choices %}
-                                    <option value="{{ time_str }}"
-                                        {% if leaving_time_display == time_str %}selected{% endif %}
-                                        >{{ time_str }}</option>
+                                    <option value="{{ time_str }}" {% if leaving_time_display == time_str %}selected{% endif %}>{{ time_str }}</option>
                                 {% endfor %}
                             </select>
                         </span>
@@ -116,19 +96,13 @@
                 {% endif %}
 
                 {% if at_home_status %}
-                   <div class="input-row">
+                    <div class="input-row">
                         <label class="label-inline">入室 (スタッフ入力)</label>
                         <span class="time-input-group">
-                            <select
-                                name="staff_entry_time"
-                                id="staff_entry_time"
-                                {% if request.user.user_role == 1 %}disabled{% endif %}
-                            >
+                            <select name="staff_entry_time" id="staff_entry_time" {% if request.user.user_role == 1 %}disabled{% endif %}>
                                 <option value="" {% if not staff_entry_time_display %}selected{% endif %}>--:--</option>
                                 {% for time_str in staff_leaving_time_choices %}
-                                    <option value="{{ time_str }}"
-                                        {% if staff_entry_time_display == time_str %}selected{% endif %}
-                                        >{{ time_str }}</option>
+                                    <option value="{{ time_str }}" {% if staff_entry_time_display == time_str %}selected{% endif %}>{{ time_str }}</option>
                                 {% endfor %}
                             </select>
                         </span>
@@ -140,16 +114,10 @@
                     <div class="input-row">
                         <label class="label-inline">退出 (スタッフ入力)</label>
                         <span class="time-input-group">
-                            <select
-                                name="{{ form.staff_leaving_time.name }}"
-                                id="{{ form.staff_leaving_time.id_for_label }}"
-                                {% if request.user.user_role == 1 %}disabled{% endif %}
-                            >
+                            <select name="{{ form.staff_leaving_time.name }}" id="{{ form.staff_leaving_time.id_for_label }}" {% if request.user.user_role == 1 %}disabled{% endif %}>
                                 <option value="" {% if not staff_leaving_time_display %}selected{% endif %}>--:--</option>
                                 {% for time_str in staff_leaving_time_choices %}
-                                    <option value="{{ time_str }}"
-                                        {% if staff_leaving_time_display == time_str %}selected{% endif %}
-                                        >{{ time_str }}</option>
+                                    <option value="{{ time_str }}" {% if staff_leaving_time_display == time_str %}selected{% endif %}>{{ time_str }}</option>
                                 {% endfor %}
                             </select>
                         </span>
@@ -161,49 +129,23 @@
 
                 <div class="comment-group">
                     <label for="morning_work_content" class="button comment-button">午前作業内容</label>
-                    <textarea
-                        name="morning_work_content"
-                        id="morning_work_content"
-                        placeholder="午前の作業内容を入力..."
-                        {% if request.user.user_role == 2 %}disabled{% endif %}
-                    >{{ morning_work_content|default_if_none:'' }}</textarea>
+                    <textarea name="morning_work_content" id="morning_work_content" placeholder="午前の作業内容を入力..." {% if request.user.user_role == 2 %}disabled{% endif %}>{{ morning_work_content|default_if_none:'' }}</textarea>
                     {% if request.user.user_role == 2 %}
-                        <input
-                            type="hidden"
-                            name="morning_work_content"
-                            value="{{ morning_work_content|default_if_none:'' }}"
-                        >
+                        <input type="hidden" name="morning_work_content" value="{{ morning_work_content|default_if_none:'' }}">
                     {% endif %}
                 </div>
 
                 <div class="comment-group">
                     <label for="afternoon_work_content" class="button comment-button">午後作業内容</label>
-                    <textarea
-                        name="afternoon_work_content"
-                        id="afternoon_work_content"
-                        placeholder="午後の作業内容を入力..."
-                        {% if request.user.user_role == 2 %}disabled{% endif %}
-                    >{{ afternoon_work_content|default_if_none:'' }}</textarea>
+                    <textarea name="afternoon_work_content" id="afternoon_work_content" placeholder="午後の作業内容を入力..." {% if request.user.user_role == 2 %}disabled{% endif %}>{{ afternoon_work_content|default_if_none:'' }}</textarea>
                     {% if request.user.user_role == 2 %}
-                        <input
-                            type="hidden"
-                            name="afternoon_work_content"
-                            value="{{ afternoon_work_content|default_if_none:'' }}"
-                        >
+                        <input type="hidden" name="afternoon_work_content" value="{{ afternoon_work_content|default_if_none:'' }}">
                     {% endif %}
                 </div>
 
                 <div class="input-row">
                     <label class="label-inline" for="{{ form.sleep_time_hours.id_for_label }}">睡眠時間</label>
-                    <input
-                        type="number"
-                        name="{{ form.sleep_time_hours.name }}"
-                        id="{{ form.sleep_time_hours.id_for_label }}"
-                        min="0"
-                        max="24"
-                        value="{{ form.sleep_time_hours.value|default_if_none:'' }}"
-                        {% if request.user.user_role == 2 %}disabled{% endif %}
-                    >
+                    <input type="number" name="{{ form.sleep_time_hours.name }}" id="{{ form.sleep_time_hours.id_for_label }}" min="0" max="24" value="{{ form.sleep_time_hours.value|default_if_none:'' }}" {% if request.user.user_role == 2 %}disabled{% endif %}>
                     {% if form.sleep_time_hours.errors %}
                         <div class="error-message">{{ form.sleep_time_hours.errors }}</div>
                     {% endif %}
@@ -417,9 +359,8 @@
 
                 <input type="radio" name="modal-trigger" id="close-confirm-modal" class="modal-trigger-radio">
             {% endif %}
-        </form> <!-- メインの入力フォーム終了 -->
+        </form>
 
-        <!-- メインフォームの外側に配置された「戻る」ボタン -->
         <div class="pagination-container">
             {% if request.user.user_role == 1 %}
                 <a href="{{ calendar_back_url }}"><button type="button">戻る</button></a>
@@ -428,7 +369,6 @@
             {% endif %}
         </div>
 
-        <!-- ログアウトフォーム -->
         <form method="post" action="{% url 'selfCare:logout' %}">
             {% csrf_token %}
             <button type="submit" class="btn btn-primary logout-btn">ログアウト</button>

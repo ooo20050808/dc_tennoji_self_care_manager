@@ -25,7 +25,8 @@
             <div class="form-group">
                 {{ form.date_list.label_tag }}
                 {{ form.date_list }}
-                {% for error in form.date_list.errors %} <span class="field-error">{{ error }}</span>
+                {% for error in form.date_list.errors %}
+                    <span class="field-error">{{ error }}</span>
                 {% endfor %}
             </div>
 
@@ -45,7 +46,6 @@
             </ul>
             <p>カンマ、スペース、または改行で複数の日付を区切って入力できます。</p>
         </div>
-
     </div>
 </body>
 </html>

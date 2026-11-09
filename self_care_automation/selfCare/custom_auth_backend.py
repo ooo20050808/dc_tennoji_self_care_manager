@@ -1,29 +1,40 @@
-#authenticate関数がメールアドレスで認証できるようにするためのカスタム認証バックエンド
-
-from django.contrib.auth.backends import ModelBackend
+from typing import Any, Optional
 from django.contrib.auth import get_user_model
+from django.contrib.auth.backends import ModelBackend
+from django.contrib.auth.base_user import AbstractBaseUser
+from django.http import HttpRequest
 
 
 class EmailBackend(ModelBackend):
-    def authenticate(self, request, username=None, email=None, password=None, **kwargs):
-        UserModel = get_user_model()
-        
-        # 管理者サイトはusernameフィールドを使用するため、usernameをemailとして扱う
-        if username is not None and email is None:
-            email = username
-        elif email is not None and username is None:
-            email = email
-            
-        if email is None:
-            return None
-            
-        try:
-            #同じメールアドレスのユーザーがいた場合始めのユーザーを取得
-            user = UserModel.objects.filter(email=email).first()
-            if user is not None and user.check_password(password):
-                return user
+    """
+    メールアドレスを使用してユーザー認証を行うためのカスタム認証バックエンド。
+    Django標準の管理者サイト（usernameを使用）およびフロントエンド（emailを使用）の両方に対応します。
+    """
 
-        except UserModel.DoesNotExist:
-            #ユーザーが見つからない場合は認証失敗
+    def authenticate(
+        self,
+        request: Optional[HttpRequest],
+        username: Optional[str] = None,
+        email: Optional[str] = None,
+        password: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Optional[AbstractBaseUser]:
+        """
+        メールアドレスとパスワードを用いてユーザーを検証する。
+        """
+        UserModel = get_user_model()
+
+        # 管理者サイト等では 'username' フィールドにメールアドレスが渡されるため、これを補完する
+        lookup_email = email or username
+
+        if not lookup_email or not password:
             return None
+
+        # 同一メールアドレスのユーザーが存在する場合、最初のユーザーを取得する
+        # ※ first() は存在しない場合に None を返すため、DoesNotExist は発生しない
+        user = UserModel.objects.filter(email=lookup_email).first()
+
+        if user and user.check_password(password) and self.user_can_authenticate(user):
+            return user
+
         return None

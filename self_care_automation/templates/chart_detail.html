@@ -25,8 +25,9 @@
         <div class="action-buttons">
             <a href="{% url 'selfCare:calendar_list' %}" class="nav-link">カレンダー画面へ</a>
         </div>
+
         {% if user.is_staff or user.user_role == 2 %}
-                <a href="{% url 'selfCare:user_list' %}?date={{ selected_date|date:'Y-m-d' }}" class="nav-link">ユーザーリストへ</a>
+            <a href="{% url 'selfCare:user_list' %}?date={{ selected_date|date:'Y-m-d' }}" class="nav-link">ユーザーリストへ</a>
         {% endif %}
     </div>
 </body>

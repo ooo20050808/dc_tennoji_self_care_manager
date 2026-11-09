@@ -9,7 +9,6 @@
 </head>
 <body>
     <div class="container">
-
         <h1>利用者認証画面</h1>
         <h1>{{ title }}</h1>
         <p class="description">
@@ -24,12 +23,12 @@
             <p class="error-message">{{ error_message }}</p>
         {% endif %}
 
-       <form action="" method="post" class="auth-form">
+        <form action="" method="post" class="auth-form">
             {% csrf_token %}
             {{ form.as_p }}
             <div class="form-actions">
                 <button type="submit" class="button button-primary">認証</button>
-                <a href="{% url 'selfCare:admin_screen'%}" class="button button-secondary">管理者画面に戻る</a>
+                <a href="{% url 'selfCare:admin_screen' %}" class="button button-secondary">管理者画面に戻る</a>
             </div>
         </form>
     </div>
