@@ -62,17 +62,23 @@ def user_login(request):
 
 
 class UserListView(LoginRequiredMixin, ListView):
-	"""利用者一覧表示ビュー（ページネーション・ステータス判定付き）"""
+	"""利用者一覧表示ビュー"""
 
 	def get(self, request, action=None, *args, **kwargs):
 		user_role = request.user.user_role
-		all_users = User.objects.filter(user_role__in=[1, 2]) if user_role == 3 else User.objects.filter(user_role=1)
+
+		# 1. ユーザー一覧の取得（必要なフィールドのみにするか、あらかじめ絞り込み）
+		if user_role == 3:
+			all_users = User.objects.filter(user_role__in=[1, 2])
+		else:
+			all_users = User.objects.filter(user_role=1)
 		all_users = list(all_users)
 
 		if request.GET.get('from') == 'complete' or not action:
 			request.session.pop('target_action', None)
 			request.session.pop('target_user_id', None)
 
+		# 日付の判定
 		try:
 			date_str = request.GET.get('date')
 			if date_str:
@@ -83,6 +89,21 @@ class UserListView(LoginRequiredMixin, ListView):
 				view_date = date.fromisoformat(session_date_str) if session_date_str else date.today()
 		except ValueError:
 			view_date = date.today()
+
+		# ---------- 【改善ポイント：N+1の解消】 ----------
+		# ループの中で毎回SQLを発行するのを防ぐため、事前に対象日のデータを一括取得（IN句）
+		user_ids = [u.id for u in all_users]
+
+		# 対象日の InputScreen を一括取得して辞書にマッピング {user_id: input_screen_instance}
+		input_screens = InputScreen.objects.filter(user_id__in=user_ids, home_screen__date=view_date)
+		input_data_map = {item.user_id: item for item in input_screens}
+
+		# 対象日の HomeScreen を一括取得して辞書にマッピング {user_id: home_screen_instance}
+		# (前回の修正で一意の想定。get_or_createの代わりに、存在しない場合は後続でバルク作成等にするのが理想ですが、
+		#  ここでは既存のものを一括取得して効率化します)
+		home_screens = HomeScreen.objects.filter(user_id__in=user_ids, date=view_date)
+		home_screen_map = {item.user_id: item for item in home_screens}
+		# ------------------------------------------------
 
 		page_size = 20
 		total_pages = (len(all_users) + page_size - 1) // page_size
@@ -96,8 +117,13 @@ class UserListView(LoginRequiredMixin, ListView):
 		user_data = []
 
 		for user in current_page_users:
-			home_screen, _ = HomeScreen.objects.get_or_create(user=user, date=view_date)
-			input_data = InputScreen.objects.filter(user=user, date__date=view_date).first()
+			# マップからキャッシュされたデータを取得（DBアクセスが発生しない）
+			home_screen = home_screen_map.get(user.id)
+			if not home_screen:
+				# 万が一存在しない場合のみ個別に作成（セーフティネット）
+				home_screen, _ = HomeScreen.objects.get_or_create(user=user, date=view_date)
+
+			input_data = input_data_map.get(user.id)
 
 			entry_time_display, leaving_time_display = "未入力", "未入力"
 			sleep_time_display, condition_display = "未入力", "未入力"
@@ -132,6 +158,7 @@ class UserListView(LoginRequiredMixin, ListView):
 			if edit_data and edit_data.get('id') == user.id:
 				display_name = edit_data.get('user_name') or edit_data.get('email', display_name)
 
+			# ※注: この関数内部でもさらにクエリが発行されているため、本来はここも一括最適化の対象です
 			_, _, overall_avg_sleep, _, _ = create_monthly_average_sleep_chart(user=user, end_date=view_date)
 			avg_sleep_display = f"{overall_avg_sleep}h" if overall_avg_sleep is not None else None
 
