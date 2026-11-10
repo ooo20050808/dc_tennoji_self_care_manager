@@ -53,8 +53,8 @@ class User(AbstractUser):
 	user_role = models.IntegerField(verbose_name="権限", choices=ROLE_CHOICES, default=CLIENT)
 
 	# 慣習に合わせて DateTimeField（タイムスタンプ）に、変数名を created_at に修正
-	created_at = models.DateTimeField(auto_now_add=True, verbose_name="作成日時")
-	updated_at = models.DateTimeField(auto_now=True, verbose_name="更新日時")
+	create_at = models.DateTimeField(auto_now_add=True, verbose_name="作成日時")
+	update_at = models.DateTimeField(auto_now=True, verbose_name="更新日時")
 
 	groups = models.ManyToManyField(
 		'auth.Group',
@@ -115,12 +115,6 @@ class InputScreen(models.Model):
 	"""毎日の勤怠・体調・服薬などの詳細記録を管理するモデル。"""
 
 	# 1日1件の仕様であれば ForeignKey から OneToOneField に変更し、変数名も直感的に修正
-	home_screen = models.ForeignKey(
-		HomeScreen,
-		on_delete=models.CASCADE,
-		related_name="input_screen_list",  # 競合を避けるために一時的にリレーション名を変更します
-		verbose_name="ホーム画面"
-	)
 	user = models.ForeignKey(
 		User,
 		on_delete=models.CASCADE,
