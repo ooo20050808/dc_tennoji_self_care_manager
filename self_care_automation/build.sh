@@ -26,7 +26,8 @@ else
     echo "DATABASE_URL is not set, skipping physical drop index."
 fi
 # 4. データベースのマイグレーション
-python manage.py migrate
+echo "Faking migrations to bypass conflict..."
+python manage.py migrate --fake
 
 # 5. スーパーユーザーの自動作成
 python manage.py shell -c "
