@@ -704,7 +704,7 @@ class InputScreenView(LoginRequiredMixin, View):
 	def get(self, request, home_screen_id, *args, **kwargs):
 		home_screen = get_object_or_404(HomeScreen, id=home_screen_id)
 		target_user = home_screen.user
-		input_data, _ = InputScreen.objects.get_or_create(home_screen=home_screen, user=home_screen.user)
+		input_data, _ = InputScreen.objects.get_or_create(user=target_user, home_screen=home_screen)
 
 		form = InputScreenForm(instance=input_data, initial={'at_home': input_data.at_home}, user=request.user)
 		user_role = request.user.user_role
@@ -750,7 +750,7 @@ class InputScreenView(LoginRequiredMixin, View):
 
 	def post(self, request, home_screen_id, *args, **kwargs):
 		home_screen = get_object_or_404(HomeScreen, id=home_screen_id)
-		input_instance, _ = InputScreen.objects.get_or_create(date=home_screen, user=home_screen.user)
+		input_instance, _ = InputScreen.objects.get_or_create(home_screen=home_screen, user=home_screen.user)
 		form = InputScreenForm(request.POST, instance=input_instance, user=request.user)
 
 		if form.is_valid():
