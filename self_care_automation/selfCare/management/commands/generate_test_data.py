@@ -136,8 +136,8 @@ class Command(BaseCommand):
                     valid_leaving_slots = [time(16, 0)]
                 leaving_t = random.choice(valid_leaving_slots)
 
-                # 睡眠時間
-                sleep_hours = round(random.choice([i * 0.5 for i in range(10, 19)]), 1)
+                # 睡眠時間（models.pyのIntegerFieldに合わせて5〜9時間の整数値をランダム生成）
+                sleep_hours = random.randint(5, 9)
 
                 # 服薬チェックの3パターンをランダム選択
                 med_pattern = random.choice(['all_true', 'some_false', 'all_false'])
@@ -186,12 +186,11 @@ class Command(BaseCommand):
                     defaults_data['staff_entry_time'] = None
                     defaults_data['staff_leaving_time'] = None
 
+                # idとuserの両方を検索条件に指定し、安全にレコードの重複を防ぎます
                 input_screen, created = InputScreen.objects.update_or_create(
                     id=home_screen.id,
-                    defaults={
-                        **defaults_data,
-                        'user': user,
-                    }
+                    user=user,
+                    defaults=defaults_data
                 )
 
                 input_screen.condition_detail_good = cond_detail_good
