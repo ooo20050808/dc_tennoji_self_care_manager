@@ -11,7 +11,7 @@ python manage.py collectstatic --no-input
 python manage.py migrate
 
 # スーパーユーザー自動作成（--noinput と環境変数を使用）
-python manage.py createsuperuser --noinput || true
+python manage.py createsuperuser
 
 # テストデータ生成
 echo "Triggering test data population..."
