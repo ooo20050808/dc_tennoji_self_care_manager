@@ -19,6 +19,10 @@ fi
 echo "=== 静的ファイルの収集 ==="
 python manage.py collectstatic --noinput --clear
 
+# 本番Postgresに残ってしまっている不整合なユニーク制約の残骸（インデックス）を強制的に削除します。
+# 存在しない場合は自動的にスキップされるため安全です。
+echo "Bypassing physical unique index leftover..."
+python manage.py dbshell --command "DROP INDEX IF EXISTS input_screen_home_screen_id_key;"
 # 4. データベースのマイグレーション
 python manage.py migrate
 
