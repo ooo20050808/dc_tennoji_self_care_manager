@@ -7,16 +7,23 @@ pip install -r requirements.txt
 # 静的ファイルの収集
 python manage.py collectstatic --no-input
 
-echo "Executing framework isolation layer..."
-python manage.py migrate --fake-initial || true
-python manage.py migrate --run-syncdb || true
-echo "Executing final physical index cleanup..."
+echo "Entering database migration block..."
+
+set +e
+
+# マイグレーションを実行（裏でユニークインデックスが作られてエラーになっても、処理は進みます）
+python manage.py migrate --fake-initial
+python manage.py migrate --run-syncdb
+
+set -e
+
+echo "Executing forced physical index drop before data seeding..."
 if [ -n "$DATABASE_URL" ]; then
     psql "$DATABASE_URL" -c "DROP INDEX IF EXISTS input_screen_home_screen_id_key;"
 else
-    echo "DATABASE_URL is not set, skipping target database cleanup."
+    echo "DATABASE_URL is not set, skipping physical drop index."
 fi
 
-# 3. 制約が完全に取り除かれた安全な状態で、テストデータ生成を走らせます。
+# 障害物が完全に取り除かれた安全な状態で、テストデータ生成を完走させます
 echo "Triggering test data population..."
 python manage.py generate_test_data
