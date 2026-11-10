@@ -189,6 +189,7 @@ class Command(BaseCommand):
                 input_screen, created = InputScreen.objects.update_or_create(
                     user=user,
                     id=home_screen.id,
+                    date_id=home_screen.id,
                     defaults=defaults_data
                 )
 
