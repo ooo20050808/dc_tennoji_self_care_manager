@@ -234,3 +234,14 @@ class SaturdayOpeningForm(forms.ModelForm):
         errors = []
         dates_to_register = set()
 
+
+
+class SaturdayOpeningDeleteForm(forms.Form):
+    """土曜開所日削除用フォーム"""
+    selected_openings = forms.CharField(label="削除対象", required=False)
+
+    def clean_selected_openings(self):
+        selected_ids = self.data.getlist('selected_openings')
+        if not selected_ids:
+            raise forms.ValidationError('削除する土曜開所日を選択してください。')
+        return [int(id_str) for id_str in selected_ids if id_str.isdigit()]
