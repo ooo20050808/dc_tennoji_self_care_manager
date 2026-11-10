@@ -20,7 +20,7 @@ echo "=== 静的ファイルの収集 ==="
 python manage.py collectstatic --noinput --clear
 
 # 4. データベースのマイグレーション
-python manage.py makemigrations
+python manage.py makemigrations --noinput
 python manage.py migrate
 
 # 5. スーパーユーザーの自動作成
