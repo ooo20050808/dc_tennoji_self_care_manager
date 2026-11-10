@@ -556,9 +556,10 @@ def create_chart_image(user, home_screen, data_field, title, y_label, condition_
 	start_date = end_date - timedelta(days=30)
 	all_dates = [start_date + timedelta(days=i) for i in range(31)]
 
-	raw_data = list(InputScreen.objects.filter(user=user, date__date__range=[start_date, end_date]).values('date__date',
-																										   data_field))
-	data_map = {item['date__date']: item[data_field] for item in raw_data if item['date__date'] is not None}
+	raw_data = list(InputScreen.objects.filter(user=user, home_screen__date__range=[start_date, end_date]).values(
+		'home_screen__date', data_field))
+	data_map = {item['home_screen__date']: item[data_field] for item in raw_data if
+				item['home_screen__date'] is not None}
 
 	dates_labels = [d.strftime("%m/%d") for d in all_dates]
 	values = [data_map.get(d, None) for d in all_dates]
@@ -633,8 +634,7 @@ def calculate_monthly_average_sleep(user, target_date):
 		return None
 	start_m = date(target_date.year, target_date.month, 1)
 	end_m = date(target_date.year, target_date.month, last_day)
-	monthly_data = InputScreen.objects.filter(user=user, date__date__range=[start_m, end_m],
-											  sleep_time_hours__isnull=False)
+	monthly_data = InputScreen.objects.filter(user=user, home_screen__date__range=[start_m, end_m], sleep_time_hours__isnull=False)
 	if not monthly_data.exists():
 		return None
 	total = monthly_data.aggregate(total_sleep=Sum('sleep_time_hours'))['total_sleep']
@@ -704,7 +704,7 @@ class InputScreenView(LoginRequiredMixin, View):
 	def get(self, request, home_screen_id, *args, **kwargs):
 		home_screen = get_object_or_404(HomeScreen, id=home_screen_id)
 		target_user = home_screen.user
-		input_data, _ = InputScreen.objects.get_or_create(user=target_user, date=home_screen)
+		input_data, _ = InputScreen.objects.get_or_create(home_screen=home_screen, user=home_screen.user)
 
 		form = InputScreenForm(instance=input_data, initial={'at_home': input_data.at_home}, user=request.user)
 		user_role = request.user.user_role
@@ -824,13 +824,13 @@ class CommentListView(LoginRequiredMixin, View):
 
 		raw_comments = InputScreen.objects.filter(
 			user=target_user,
-			date__date__range=[start_date, end_date]
-		).exclude(user_comment__exact='', staff_comment__exact='').order_by("date__date")
+			home_screen__date__range=[start_date, end_date]
+		).exclude(user_comment__exact='', staff_comment__exact='').order_by("home_screen__date")
 
 		# 開業日（日曜・未登録の土曜を除く）のみに絞り込み
 		comment_data = []
 		for item in raw_comments:
-			item_date = item.date.date
+			item_date = item.home_screen.date
 			if item_date.weekday() == calendar.SUNDAY:
 				continue
 			if item_date.weekday() == calendar.SATURDAY and item_date not in registered_saturdays:
