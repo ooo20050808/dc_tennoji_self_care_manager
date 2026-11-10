@@ -187,10 +187,11 @@ class Command(BaseCommand):
                     defaults_data['staff_leaving_time'] = None
 
                 input_screen, created = InputScreen.objects.update_or_create(
-                    user=user,
                     id=home_screen.id,
-                    date_id=home_screen.id,
-                    defaults=defaults_data
+                    defaults={
+                        **defaults_data,
+                        'user': user,
+                    }
                 )
 
                 input_screen.condition_detail_good = cond_detail_good
