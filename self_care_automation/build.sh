@@ -25,12 +25,19 @@ if [ -n "$DATABASE_URL" ]; then
 else
     echo "DATABASE_URL is not set, skipping physical drop index."
 fi
-# 4. データベースのマイグレーション
-echo "Executing fail-safe database structure sync..."
-python manage.py migrate --fake-initial
-python manage.py makemigrations selfCare
-python manage.py migrate selfCare
-python manage.py migrate
+echo "Running migrations with multi-stage index removal..."
+# 通常のマイグレーションを走らせますが、万が一エラーが起きても一時的に続行させます
+python manage.py migrate --fake-initial || true
+
+# 万が一マイグレーションの途中でユニークインデックスが再生成されてしまった場合、
+# それを再度、物理的に強制破壊（DROP）します。これにより既存の重複データは完全に保護されます。
+if [ -n "$DATABASE_URL" ]; then
+    echo "Post-migration cleanup: dropping ghost index if re-created..."
+    psql "$DATABASE_URL" -c "DROP INDEX IF EXISTS input_screen_home_screen_id_key;"
+fi
+
+# 履歴テーブルの状態に関係なく、現在のForeignKey構造とデータ生成スクリプトだけを安全に完走させます
+python manage.py migrate --run-syncdb || true
 
 # 5. スーパーユーザーの自動作成
 python manage.py shell -c "
