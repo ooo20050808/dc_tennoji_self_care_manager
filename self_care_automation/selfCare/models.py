@@ -118,7 +118,7 @@ class InputScreen(models.Model):
 	home_screen = models.ForeignKey(
 		HomeScreen,
 		on_delete=models.CASCADE,
-		related_name="input_screen",
+		related_name="input_screen_list",  # 競合を避けるために一時的にリレーション名を変更します
 		verbose_name="ホーム画面"
 	)
 	user = models.ForeignKey(
