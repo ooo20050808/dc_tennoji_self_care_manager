@@ -53,8 +53,8 @@ class User(AbstractUser):
 	user_role = models.IntegerField(verbose_name="権限", choices=ROLE_CHOICES, default=CLIENT)
 
 	# 慣習に合わせて DateTimeField（タイムスタンプ）に、変数名を created_at に修正
-	create_at = models.DateTimeField(auto_now_add=True, verbose_name="作成日時")
-	update_at = models.DateTimeField(auto_now=True, verbose_name="更新日時")
+	created_at = models.DateTimeField(auto_now_add=True, verbose_name="作成日時")
+	updated_at = models.DateTimeField(auto_now=True, verbose_name="更新日時")
 
 	groups = models.ManyToManyField(
 		'auth.Group',
