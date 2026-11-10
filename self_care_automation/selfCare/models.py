@@ -115,7 +115,7 @@ class InputScreen(models.Model):
 	"""毎日の勤怠・体調・服薬などの詳細記録を管理するモデル。"""
 
 	# 1日1件の仕様であれば ForeignKey から OneToOneField に変更し、変数名も直感的に修正
-	home_screen = models.OneToOneField(
+	home_screen = models.ForeignKey(
 		HomeScreen,
 		on_delete=models.CASCADE,
 		related_name="input_screen",
