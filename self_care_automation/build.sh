@@ -26,9 +26,10 @@ else
     echo "DATABASE_URL is not set, skipping physical drop index."
 fi
 # 4. データベースのマイグレーション
-echo "Perfectly faking initial and applying columns..."
-python manage.py migrate selfCare zero --fake || true
-python manage.py migrate selfCare 0001 --fake || true
+echo "Executing fail-safe database structure sync..."
+python manage.py migrate --fake-initial
+python manage.py makemigrations selfCare
+python manage.py migrate selfCare
 python manage.py migrate
 
 # 5. スーパーユーザーの自動作成
