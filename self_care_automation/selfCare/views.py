@@ -830,15 +830,22 @@ class CommentListView(LoginRequiredMixin, View):
 			month = today.month
 
 		start_date = date(year, month, 1)
-		end_date = date(year, month, calendar.monthrange(year, month)[1])
+
+		# ▼【修正】今月または過去の場合、end_dateを今日までに制限する
+		month_end_date = date(year, month, calendar.monthrange(year, month)[1])
+		end_date = min(today, month_end_date) if (year == today.year and month == today.month) else month_end_date
+		if date(year, month, 1) > today:
+			end_date = date(year, month, 1) - timedelta(days=1)
 
 		registered_saturdays = set(
 			SaturdayOpening.objects.filter(open_date__range=[start_date, end_date]).values_list('open_date', flat=True)
 		)
 
+		# ▼【修正】今日以降のデータが混ざらないよう、date__lte=today 条件を追加
 		raw_comments = InputScreen.objects.filter(
 			user=target_user,
-			home_screen__date__range=[start_date, end_date]
+			home_screen__date__range=[start_date, end_date],
+			home_screen__date__lte=today
 		).exclude(user_comment__exact='', staff_comment__exact='').order_by("home_screen__date")
 
 		# 開業日（日曜・未登録の土曜を除く）のみに絞り込み
