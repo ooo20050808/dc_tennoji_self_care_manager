@@ -136,10 +136,10 @@ class Command(BaseCommand):
                     valid_leaving_slots = [time(16, 0)]
                 leaving_t = random.choice(valid_leaving_slots)
 
-                # 睡眠時間（models.pyのIntegerFieldに合わせて5〜9時間の整数値をランダム生成）
+                # 睡眠時間（5〜9時間の整数値）
                 sleep_hours = random.randint(5, 9)
 
-                # 服薬チェックの3パターンをランダム選択
+                # 服薬チェック
                 med_pattern = random.choice(['all_true', 'some_false', 'all_false'])
                 if med_pattern == 'all_true':
                     med_m, med_n, med_nig = True, True, True
@@ -158,6 +158,10 @@ class Command(BaseCommand):
                 cond_detail_caution = random.choice(detail_caution_choices)
                 cond_detail_poor = random.choice(detail_poor_choices)
 
+                # 【確実に入力されるように明示的に選択】
+                morning_content = random.choice(morning_works)
+                afternoon_content = random.choice(afternoon_works)
+
                 # データベース保存用パラメータ
                 defaults_data = {
                     'at_home': at_home,
@@ -169,8 +173,8 @@ class Command(BaseCommand):
                     'medication_morning': med_m,
                     'medication_noon': med_n,
                     'medication_night': med_nig,
-                    'morning_work_content': random.choice(morning_works),
-                    'afternoon_work_content': random.choice(afternoon_works),
+                    'morning_work_content': morning_content,    # 確実にセット
+                    'afternoon_work_content': afternoon_content,  # 確実にセット
                     'user_comment': random.choice(user_comments),
                     'staff_comment': random.choice(staff_comments),
                 }
@@ -186,7 +190,7 @@ class Command(BaseCommand):
                     defaults_data['staff_entry_time'] = None
                     defaults_data['staff_leaving_time'] = None
 
-                # idとuserの両方を検索条件に指定し、安全にレコードの重複を防ぎます
+                # データベースへ保存・更新
                 input_screen, created = InputScreen.objects.update_or_create(
                     home_screen=home_screen,
                     user=user,
