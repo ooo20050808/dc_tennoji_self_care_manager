@@ -748,7 +748,12 @@ class InputScreenView(LoginRequiredMixin, View):
 			"entry_time_display": entry_time_display,
 			"leaving_time_display": leaving_time_display,
 			"staff_entry_time_display": staff_entry_time_display,
-			"staff_leaving_time_display": staff_leaving_time_display
+			"staff_leaving_time_display": staff_leaving_time_display,
+			"morning_work_content": input_data.morning_work_content,
+			"afternoon_work_content": input_data.afternoon_work_content,
+			"condition_detail_good": input_data.condition_detail_good,
+			"condition_detail_caution": input_data.condition_detail_caution,
+			"condition_detail_poor": input_data.condition_detail_poor,
 		}
 		return render(request, 'input_screen.html', context)
 
