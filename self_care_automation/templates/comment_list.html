@@ -31,7 +31,7 @@
             <div class="comment-list">
                 {% for data in comment_data %}
                     <div class="comment-item">
-                        <p class="comment-date">{{ data.date.date|date:"Y/m/d" }}</p>
+                        <p class="comment-date">{{ data.date|date:"Y/m/d" }}</p>
 
                         {% if data.user_comment %}
                             <div class="comment user-comment">
