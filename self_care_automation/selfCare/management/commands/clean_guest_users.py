@@ -8,8 +8,9 @@ class Command(BaseCommand):
 		# 残したい（絶対に削除しない）あなたのアカウントのメールアドレスをリストに指定します
 		WHITE_LIST_EMAILS = [
 			'admin@example.com',
-			'staff@example.com',
-			'client@example.com',
+			'a@example.com',
+			's@example.com',
+			'd@example.com'
 		]
 
 		self.stdout.write(self.style.NOTICE('ゲストユーザーのクリーンアップ処理を開始します...'))
