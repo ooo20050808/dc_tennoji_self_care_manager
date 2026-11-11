@@ -45,7 +45,19 @@ class UserCreateForm(forms.ModelForm):
     """ユーザー新規作成フォーム"""
     password = forms.CharField(label="パスワード", widget=forms.PasswordInput)
     password_confirm = forms.CharField(label="パスワード（確認）", widget=forms.PasswordInput)
-    user_role = forms.IntegerField(label="ユーザー権限", min_value=1, max_value=3)
+
+    # 選択肢の定義（1, 2, 3 のみ選択可能にする）
+    USER_ROLE_CHOICES = [
+        (1, '1：利用者'),
+        (2, '2：スタッフ'),
+        (3, '3：管理者'),
+    ]
+    user_role = forms.TypedChoiceField(
+        label="ユーザー権限",
+        choices=USER_ROLE_CHOICES,
+        coerce=int,  # 選択された値を整数（int）として扱う
+        widget=forms.Select(attrs={'class': 'form-control'})  # 必要に応じてCSSクラスを追加
+    )
 
     class Meta:
         model = User
