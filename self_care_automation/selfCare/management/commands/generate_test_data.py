@@ -6,21 +6,15 @@ from selfCare.models import User, HomeScreen, InputScreen, SaturdayOpening
 
 
 class Command(BaseCommand):
-    help = '1月1日から当月末日（または指定月）までの勤怠・生活テストデータを自動生成します。'
+    help = '1月1日から今日までの勤怠・生活テストデータを自動生成します。'
 
     def handle(self, *args, **options):
         now = timezone.now()
         current_year = now.year
-        current_month = now.month
 
-        # 1. 対象期間の設定（1月1日 〜 今月の末日まで自動設定）
+        # 1. 対象期間の設定（1月1日 〜 今日まで）
         start_date = datetime(current_year, 1, 1).date()
-
-        # 当月の最終日を自動計算
-        if current_month == 12:
-            end_date = datetime(current_year + 1, 1, 1).date() - timedelta(days=1)
-        else:
-            end_date = datetime(current_year, current_month + 1, 1).date() - timedelta(days=1)
+        end_date = now.date()  # 当月末日から「今日」に変更
 
         users = User.objects.filter(user_role=1)
         if not users.exists():
@@ -36,7 +30,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.NOTICE(f'{start_date} から {end_date} までのテストデータ生成を開始します...'))
 
-        # 2. 期間内の「土曜日（weekday()==5）」を一旦すべてクリアするか、既存をリセットして45%の確率で再登録
+        # 2. 期間内の「土曜日（weekday()==5）」を一旦すべてクリアし、45%の確率で再登録
         SaturdayOpening.objects.filter(open_date__range=[start_date, end_date]).delete()
 
         current_date = start_date
