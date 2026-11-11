@@ -6,7 +6,7 @@ from selfCare.models import User, HomeScreen, InputScreen, SaturdayOpening
 
 
 class Command(BaseCommand):
-    help = '1月1日から今日までの勤怠・生活テストデータを自動生成します。'
+    help = '1月1日から今日までの勤怠・生活テストデータを自動生成し、未来の不要なデータを削除します。'
 
     def handle(self, *args, **options):
         now = timezone.now()
@@ -14,7 +14,12 @@ class Command(BaseCommand):
 
         # 1. 対象期間の設定（1月1日 〜 今日まで）
         start_date = datetime(current_year, 1, 1).date()
-        end_date = now.date()  # 当月末日から「今日」に変更
+        end_date = now.date()
+
+        # ▼【追加の解決策】今日より後（未来）に作成された不要なデータをここで一括削除
+        deleted_home_screens, _ = HomeScreen.objects.filter(date__gt=end_date).delete()
+        deleted_saturdays, _ = SaturdayOpening.objects.filter(open_date__gt=end_date).delete()
+        self.stdout.write(self.style.NOTICE(f'今日以降の未来データ（HomeScreen: {deleted_home_screens}件, 土曜開所日: {deleted_saturdays}件）を削除しました。'))
 
         users = User.objects.filter(user_role=1)
         if not users.exists():
@@ -30,7 +35,7 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.NOTICE(f'{start_date} から {end_date} までのテストデータ生成を開始します...'))
 
-        # 2. 期間内の「土曜日（weekday()==5）」を一旦すべてクリアし、45%の確率で再登録
+        # 2. 期間内の「土曜日（weekday()==5）」を一旦クリアし、45%の確率で再登録
         SaturdayOpening.objects.filter(open_date__range=[start_date, end_date]).delete()
 
         current_date = start_date
@@ -176,8 +181,8 @@ class Command(BaseCommand):
                     'medication_morning': med_m,
                     'medication_noon': med_n,
                     'medication_night': med_nig,
-                    'morning_work_content': morning_content,      # 確実にセット
-                    'afternoon_work_content': afternoon_content,    # 確実にセット
+                    'morning_work_content': morning_content,
+                    'afternoon_work_content': afternoon_content,
                     'user_comment': random.choice(user_comments),
                     'staff_comment': random.choice(staff_comments),
                 }
