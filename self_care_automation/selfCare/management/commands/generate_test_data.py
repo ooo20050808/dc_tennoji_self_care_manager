@@ -152,13 +152,22 @@ class Command(BaseCommand):
                     if med_m and med_n and med_nig:
                         med_nig = False
 
-                # 体調と体調詳細モーダル
+                # 1. 体調を選択（'〇': 良好, '△': 注意, '✕': 悪化）
                 condition = random.choice(['〇', '△', '✕'])
-                cond_detail_good = random.choice(detail_good_choices)
-                cond_detail_caution = random.choice(detail_caution_choices)
-                cond_detail_poor = random.choice(detail_poor_choices)
 
-                # 【確実に入力されるように明示的に選択】
+                # 2. 選択した体調に応じて「対応する詳細のみ」に値をセットし、他は空文字にする
+                cond_detail_good = ''
+                cond_detail_caution = ''
+                cond_detail_poor = ''
+
+                if condition == '〇':
+                    cond_detail_good = random.choice(detail_good_choices)
+                elif condition == '△':
+                    cond_detail_caution = random.choice(detail_caution_choices)
+                elif condition == '✕':
+                    cond_detail_poor = random.choice(detail_poor_choices)
+
+                # 3. 午前・午後の作業内容を確実に選択
                 morning_content = random.choice(morning_works)
                 afternoon_content = random.choice(afternoon_works)
 
@@ -173,8 +182,8 @@ class Command(BaseCommand):
                     'medication_morning': med_m,
                     'medication_noon': med_n,
                     'medication_night': med_nig,
-                    'morning_work_content': morning_content,    # 確実にセット
-                    'afternoon_work_content': afternoon_content,  # 確実にセット
+                    'morning_work_content': morning_content,      # 確実にセット
+                    'afternoon_work_content': afternoon_content,    # 確実にセット
                     'user_comment': random.choice(user_comments),
                     'staff_comment': random.choice(staff_comments),
                 }
@@ -196,11 +205,6 @@ class Command(BaseCommand):
                     user=user,
                     defaults=defaults_data
                 )
-
-                input_screen.condition_detail_good = cond_detail_good
-                input_screen.condition_detail_caution = cond_detail_caution
-                input_screen.condition_detail_poor = cond_detail_poor
-                input_screen.save()
 
                 if created:
                     total_created += 1
