@@ -188,7 +188,7 @@ class Command(BaseCommand):
 
                 # idとuserの両方を検索条件に指定し、安全にレコードの重複を防ぎます
                 input_screen, created = InputScreen.objects.update_or_create(
-                    id=home_screen.id,
+                    home_screen=home_screen,
                     user=user,
                     defaults=defaults_data
                 )

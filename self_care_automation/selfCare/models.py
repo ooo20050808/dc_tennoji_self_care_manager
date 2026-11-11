@@ -119,13 +119,13 @@ class InputScreen(models.Model):
 		verbose_name="ユーザー"
 	)
 	# HomeScreenとの紐づけを追加
-	home_screen = models.OneToOneField(
-        HomeScreen,
-        on_delete=models.CASCADE,
-        related_name="input_screen",
-        verbose_name="ホーム画面",
-        null=True, blank=True # 既存データがある場合の考慮
-    )
+	home_screen = models.ForeignKey(
+		HomeScreen,
+		on_delete=models.CASCADE,
+		related_name="input_screens",  # 参照名も複数形に変更
+		verbose_name="ホーム画面",
+		null=True, blank=True
+	)
 	# ... その他のフィールド ...
 	entry_time = models.TimeField(verbose_name="入室時刻", null=True, blank=True)
 	leaving_time = models.TimeField(verbose_name="退出時刻", null=True, blank=True)

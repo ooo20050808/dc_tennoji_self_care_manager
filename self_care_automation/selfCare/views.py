@@ -704,7 +704,11 @@ class InputScreenView(LoginRequiredMixin, View):
 	def get(self, request, home_screen_id, *args, **kwargs):
 		home_screen = get_object_or_404(HomeScreen, id=home_screen_id)
 		target_user = home_screen.user
-		input_data, _ = InputScreen.objects.get_or_create(user=target_user, home_screen=home_screen)
+
+		# 【修正】1対多に対応：存在すれば最初の1件を取得、なければ新規作成
+		input_data = InputScreen.objects.filter(user=target_user, home_screen=home_screen).first()
+		if not input_data:
+			input_data = InputScreen.objects.create(user=target_user, home_screen=home_screen)
 
 		form = InputScreenForm(instance=input_data, initial={'at_home': input_data.at_home}, user=request.user)
 		user_role = request.user.user_role
@@ -750,7 +754,12 @@ class InputScreenView(LoginRequiredMixin, View):
 
 	def post(self, request, home_screen_id, *args, **kwargs):
 		home_screen = get_object_or_404(HomeScreen, id=home_screen_id)
-		input_instance, _ = InputScreen.objects.get_or_create(home_screen=home_screen, user=home_screen.user)
+
+		# 【修正】1対多に対応：既存のインスタンスを取得、なければ新規作成
+		input_instance = InputScreen.objects.filter(home_screen=home_screen, user=home_screen.user).first()
+		if not input_instance:
+			input_instance = InputScreen.objects.create(home_screen=home_screen, user=home_screen.user)
+
 		form = InputScreenForm(request.POST, instance=input_instance, user=request.user)
 
 		if form.is_valid():
